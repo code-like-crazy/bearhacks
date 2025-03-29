@@ -135,3 +135,18 @@ export const votes = sqliteTable("votes", {
 
 export type InsertUser = typeof usersTable.$inferInsert;
 export type SelectUser = typeof usersTable.$inferSelect;
+
+export type InsertBoard = typeof boards.$inferInsert;
+export type SelectBoard = typeof boards.$inferSelect;
+
+export type InsertBoardElement = typeof boardElements.$inferInsert;
+export type SelectBoardElement = typeof boardElements.$inferSelect;
+
+export type InsertBoardMember = typeof boardMembers.$inferInsert;
+export type SelectBoardMember = typeof boardMembers.$inferSelect;
+
+export type InsertAiOutput = typeof aiOutputs.$inferInsert;
+export type SelectAiOutput = typeof aiOutputs.$inferSelect;
+
+export type InsertVote = typeof votes.$inferInsert;
+export type SelectVote = typeof votes.$inferSelect;
