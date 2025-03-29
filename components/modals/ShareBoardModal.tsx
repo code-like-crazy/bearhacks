@@ -16,7 +16,10 @@ import {
   DialogTrigger,
 } from "../ui/dialog";
 
-type Props = { board: SelectBoard };
+type Props = {
+  board: SelectBoard;
+  trigger?: React.ReactNode;
+};
 
 const springConfig = {
   type: "spring",
@@ -24,7 +27,7 @@ const springConfig = {
   damping: 25,
 };
 
-const ShareBoardModal = ({ board }: Props) => {
+const ShareBoardModal = ({ board, trigger }: Props) => {
   // Track which button was recently clicked
   const [recentCopy, setRecentCopy] = useState<"link" | "code" | null>(null);
 
@@ -67,13 +70,15 @@ const ShareBoardModal = ({ board }: Props) => {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button
-          variant="ghost"
-          size="icon"
-          className="transition-transform hover:scale-110 active:scale-[0.98]"
-        >
-          <Share className="size-5" />
-        </Button>
+        {trigger || (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="transition-transform hover:scale-110 active:scale-[0.98]"
+          >
+            <Share className="size-5" />
+          </Button>
+        )}
       </DialogTrigger>
 
       <DialogContent>
