@@ -53,7 +53,7 @@ export async function deleteBoard(
     await db.delete(boards).where(eq(boards.id, validation.data.boardId));
 
     // Revalidate the path to update the UI
-    revalidatePath("/(main)/(dashboard)/home"); // Revalidate the home page where boards are listed
+    revalidatePath("/home"); // Revalidate the home page where boards are listed
 
     return { message: "Board deleted successfully." };
   } catch (error) {
