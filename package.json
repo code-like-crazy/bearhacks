@@ -14,6 +14,7 @@
     "format": "prettier --write ."
   },
   "dependencies": {
+    "@excalidraw/excalidraw": "^0.18.0",
     "@libsql/client": "^0.15.1",
     "@radix-ui/react-slot": "^1.1.2",
     "bcryptjs": "^3.0.2",
@@ -23,8 +24,8 @@
     "lucide-react": "^0.485.0",
     "next": "15.2.4",
     "next-auth": "5.0.0-beta.25",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
     "tailwind-merge": "^3.0.2",
     "tw-animate-css": "^1.2.5",
     "zod": "^3.24.2"

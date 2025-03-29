@@ -1,5 +1,12 @@
+import Whiteboard from "@/components/ui/whiteboard";
+
 const BoardPage = () => {
-  // TODO: Create the board here
-  return <div>BoardPage</div>;
+  return (
+    <div>
+      <h1 style={{ textAlign: 'center' }}>Interactive Whiteboard</h1>
+      <Whiteboard />
+    </div>
+  );
 };
+
 export default BoardPage;
