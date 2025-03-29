@@ -1,8 +1,7 @@
 "use client"
 
 import type React from "react"
-
-import { useRef, useState } from "react"
+import { useRef, useState, useCallback } from "react" // Import useCallback
 import type { ToolType } from "@/lib/types"
 import StickyNoteElement from "./elements/sticky-note"
 import ImageElement from "./elements/image-element"
@@ -17,7 +16,7 @@ interface CanvasProps {
   scale: number
   position: { x: number; y: number }
   activeTool: ToolType
-  isDragging: boolean
+  isDragging: boolean // This prop might indicate panning/zooming, separate from element dragging
   currentColor: string
 }
 
@@ -28,6 +27,8 @@ export interface CanvasElement {
   content: any
   zIndex: number
 }
+
+type Point = { x: number; y: number };
 
 export default function Canvas({ scale, position, activeTool, isDragging, currentColor }: CanvasProps) {
   const [elements, setElements] = useState<CanvasElement[]>([
@@ -60,13 +61,13 @@ export default function Canvas({ scale, position, activeTool, isDragging, curren
   const [nextZIndex, setNextZIndex] = useState(3)
   const [selectedElement, setSelectedElement] = useState<string | null>(null)
   const [currentShape, setCurrentShape] = useState<"square" | "circle" | "triangle" | "diamond">("square")
-  const [isDrawing, setIsDrawing] = useState(false)
-  const [startShapePosition, setStartShapePosition] = useState<{ x: number; y: number } | null>(null)
+  const [isDrawing, setIsDrawing] = useState(false) // For pencil tool
+  const [startShapePosition, setStartShapePosition] = useState<Point | null>(null) // For shape tool
   const [currentShapeSize, setCurrentShapeSize] = useState<number>(50)
-  const [isShapeDragging, setIsShapeDragging] = useState(false)
+  const [isShapeDragging, setIsShapeDragging] = useState(false) // For shape tool preview
   const [currentShapeType, setCurrentShapeType] = useState<"square" | "circle" | "triangle" | "diamond">("square")
   const [shapePreview, setShapePreview] = useState<CanvasElement | null>(null)
-  const [cursorPosition, setCursorPosition] = useState<{ x: number; y: number } | null>(null)
+  const [cursorPosition, setCursorPosition] = useState<Point | null>(null)
   const [isCursorPreviewVisible, setIsCursorPreviewVisible] = useState(false)
   const [shapeStyle, setShapeStyle] = useState<React.CSSProperties>({
     width: 50,
@@ -78,311 +79,294 @@ export default function Canvas({ scale, position, activeTool, isDragging, curren
     pointerEvents: "none",
   });
 
-  const [currentPath, setCurrentPath] = useState<{ x: number; y: number }[]>([])
+  const [currentPath, setCurrentPath] = useState<Point[]>([])
   const [currentStrokeWidth, setCurrentStrokeWidth] = useState(2)
 
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!canvasRef.current) return;
-
+  // Helper to get coordinates from Mouse or Touch events relative to the canvas
+  const getCoordinatesFromEvent = useCallback((e: React.MouseEvent | React.TouchEvent): Point | null => {
+    if (!canvasRef.current) return null;
     const rect = canvasRef.current.getBoundingClientRect();
-    const x = (e.clientX - rect.left - position.x) / scale;
-    const y = (e.clientY - rect.top - position.y) / scale;
+    let clientX: number, clientY: number;
 
-    setCursorPosition({ x, y });
-
-    if (activeTool.startsWith("shape-") && isShapeDragging && startShapePosition) {
-      const size = Math.max(Math.abs(x - startShapePosition.x), Math.abs(y - startShapePosition.y));
-      setCurrentShapeSize(size);
-      setShapeStyle({
-        width: size,
-        height: size,
-        border: `2px dashed ${currentColor}`,
-        position: "absolute",
-        left: startShapePosition.x < x ? startShapePosition.x : x - size,
-        top: startShapePosition.y < y ? startShapePosition.y : y - size,
-        pointerEvents: "none",
-      });
+    if ('touches' in e) { // Touch event
+      if (e.touches.length === 0) return null; // No touch points
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else { // Mouse event
+      clientX = e.clientX;
+      clientY = e.clientY;
     }
-  };
 
-  const handleCanvasClick = (e: React.MouseEvent) => {
-    if (!canvasRef.current || isDragging) return;
+    const x = (clientX - rect.left - position.x) / scale;
+    const y = (clientY - rect.top - position.y) / scale;
+    return { x, y };
+  }, [scale, position.x, position.y]);
 
-    const rect = canvasRef.current.getBoundingClientRect();
-    const x = (e.clientX - rect.left - position.x) / scale;
-    const y = (e.clientY - rect.top - position.y) / scale;
 
-    if (activeTool === "sticky") {
-      addStickyNote(x, y);
-    } else if (activeTool === "camera") {
-      if (fileInputRef.current) {
-        fileInputRef.current.click();
-      }
-    } else if (activeTool === "text") {
-      addTextElement(x, y);
-    } else if (activeTool === "stamp") {
-      addStampElement(x, y);
-    } else if (activeTool === "eraser") {
-      // Handled by element click
-    } else if (activeTool === "select") {
-      // Deselect when clicking on empty canvas
-      setSelectedElement(null);
-    }
-  };
+  // --- Drawing Logic ---
+  const startDrawing = useCallback((point: Point) => {
+    setIsDrawing(true);
+    setCurrentPath([point]); // Start new path
+  }, []);
 
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (!canvasRef.current) return;
+  const draw = useCallback((point: Point) => {
+    if (!isDrawing) return;
+    setCurrentPath((prevPath) => [...prevPath, point]);
+  }, [isDrawing]);
 
-    const rect = canvasRef.current.getBoundingClientRect();
-    const x = (e.clientX - rect.left - position.x) / scale;
-    const y = (e.clientY - rect.top - position.y) / scale;
+  const endDrawing = useCallback(() => {
+    if (!isDrawing) return; // Prevent ending if not drawing
 
-    if (activeTool.startsWith("shape-")) {
-      setStartShapePosition({ x, y });
-      setIsShapeDragging(true);
-      setShapeStyle({
-        width: currentShapeSize,
-        height: currentShapeSize,
-        border: `2px dashed ${currentColor}`,
-        position: "absolute",
-        left: x,
-        top: y,
-        pointerEvents: "none",
-      });
-    }
-  };
-
-  const handleMouseUp = () => {
-    if (startShapePosition && cursorPosition && activeTool.startsWith("shape-")) {
-      const shape = currentShapeType;
-      const x = startShapePosition.x;
-      const y = startShapePosition.y;
-      addShapeElement(
-        x,
-        y,
-        shape
-      );
-      setStartShapePosition(null);
-      setIsShapeDragging(false);
-      setShapeStyle({
-        width: 50,
-        height: 50,
-        border: `2px dashed ${currentColor}`,
-        position: "absolute",
-        left: -1000,
-        top: -1000,
-        pointerEvents: "none",
-      });
-    }
-  };
-
-  const addShapeElement = (x: number, y: number, shape: "square" | "circle" | "triangle" | "diamond") => {
-    const newShape: CanvasElement = {
-      id: `shape-${Date.now()}`,
-      type: "shape",
-      position: { x, y },
-      content: {
-        shape: shape,
-        color: currentColor,
-        size: currentShapeSize,
-      },
-      zIndex: nextZIndex,
-    };
-
-    setElements([...elements, newShape]);
-    setNextZIndex(nextZIndex + 1);
-    setSelectedElement(newShape.id);
-  };
-
-  const updateElementPosition = (id: string, newPosition: { x: number; y: number }) => {
-    setElements(elements.map((el) => (el.id === id ? { ...el, position: newPosition } : el)));
-  };
-
-  const handleMouseMoveForDrawing = (e: React.MouseEvent) => {
-    if (!isDrawing || !canvasRef.current) return
-
-    const rect = canvasRef.current.getBoundingClientRect()
-    const x = (e.clientX - rect.left - position.x) / scale
-    const y = (e.clientY - rect.top - position.y) / scale
-
-    setCurrentPath([...currentPath, { x, y }])
-  }
-
-  const handleMouseUpForDrawing = () => {
-    if (isDrawing && currentPath.length > 1) {
-      // Save the drawing
+    if (currentPath.length > 1) {
       const newDrawing: CanvasElement = {
         id: `drawing-${Date.now()}`,
         type: "drawing",
-        position: { x: 0, y: 0 },
+        position: { x: 0, y: 0 }, // Position handled by DrawingCanvas based on path
         content: {
           path: currentPath,
           color: currentColor,
           strokeWidth: currentStrokeWidth,
         },
         zIndex: nextZIndex,
-      }
+      };
+      setElements((prev) => [...prev, newDrawing]);
+      setNextZIndex((prev) => prev + 1);
+    }
+    setIsDrawing(false);
+    setCurrentPath([]);
+  }, [isDrawing, currentPath, currentColor, currentStrokeWidth, nextZIndex]);
 
-      setElements([...elements, newDrawing])
-      setNextZIndex(nextZIndex + 1)
+  // --- Shape Logic ---
+   const startShape = useCallback((point: Point) => {
+    setStartShapePosition(point);
+    setIsShapeDragging(true);
+    // Initial style set here, updated in move
+    setShapeStyle({
+        width: 0, // Start with zero size
+        height: 0,
+        border: `2px dashed ${currentColor}`,
+        position: "absolute",
+        left: point.x,
+        top: point.y,
+        pointerEvents: "none",
+      });
+  }, [currentColor]);
+
+  const updateShapePreview = useCallback((point: Point) => {
+     if (!isShapeDragging || !startShapePosition) return;
+      const size = Math.max(Math.abs(point.x - startShapePosition.x), Math.abs(point.y - startShapePosition.y));
+      setCurrentShapeSize(size); // Store the size if needed for the final element
+      setShapeStyle({
+        width: size,
+        height: size,
+        border: `2px dashed ${currentColor}`,
+        position: "absolute",
+        // Adjust left/top based on drag direction
+        left: Math.min(point.x, startShapePosition.x),
+        top: Math.min(point.y, startShapePosition.y),
+        pointerEvents: "none",
+      });
+  }, [isShapeDragging, startShapePosition, currentColor]);
+
+  const endShape = useCallback(() => {
+    if (!isShapeDragging || !startShapePosition) return;
+
+    // Use the calculated size
+    if (currentShapeSize > 5) { // Add a threshold to avoid tiny shapes on click
+        const topLeft = {
+             x: Math.min(cursorPosition?.x ?? startShapePosition.x, startShapePosition.x),
+             y: Math.min(cursorPosition?.y ?? startShapePosition.y, startShapePosition.y)
+        };
+        const newShape: CanvasElement = {
+            id: `shape-${Date.now()}`,
+            type: "shape",
+            position: topLeft, // Use calculated top-left corner
+            content: {
+                shape: currentShapeType, // Make sure this is updated based on toolbar selection
+                color: currentColor,
+                size: currentShapeSize,
+            },
+            zIndex: nextZIndex,
+        };
+        setElements((prev) => [...prev, newShape]);
+        setNextZIndex((prev) => prev + 1);
+        setSelectedElement(newShape.id); // Optionally select the new shape
     }
 
-    setIsDrawing(false)
-    setCurrentPath([])
-  }
+    // Reset shape dragging state
+    setStartShapePosition(null);
+    setIsShapeDragging(false);
+    setCurrentShapeSize(50); // Reset default size
+    setShapeStyle({ // Hide preview
+        width: 50, height: 50, border: `2px dashed ${currentColor}`,
+        position: "absolute", left: -1000, top: -1000, pointerEvents: "none",
+    });
+  }, [isShapeDragging, startShapePosition, cursorPosition, currentShapeType, currentColor, currentShapeSize, nextZIndex]);
 
-  // Add a sticky note
+
+  // --- Event Handlers ---
+  const handlePointerDown = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    // Prevent default touch behavior like scrolling
+    if ('touches' in e) {
+        // Allow default for multi-touch (pinch/zoom) gestures if implemented elsewhere
+        if (e.touches.length === 1) {
+             e.preventDefault();
+        }
+    }
+    const point = getCoordinatesFromEvent(e);
+    // Original check: Ignore if no point or if canvas is being dragged (panning/zooming)
+    if (!point || isDragging) return;
+
+    if (activeTool === "pencil") {
+      startDrawing(point);
+    } else if (activeTool.startsWith("shape-")) {
+      startShape(point);
+    }
+    // Add other tool start logic here (e.g., grab)
+  }, [activeTool, getCoordinatesFromEvent, startDrawing, startShape, isDragging]);
+
+  const handlePointerMove = useCallback((e: React.MouseEvent | React.TouchEvent) => {
+    const point = getCoordinatesFromEvent(e);
+    if (!point) return;
+    setCursorPosition(point); // Update general cursor position
+
+    if (activeTool === "pencil") {
+      draw(point);
+    } else if (activeTool.startsWith("shape-")) {
+      updateShapePreview(point);
+    }
+    // Add other tool move logic here (e.g., grab)
+  }, [activeTool, getCoordinatesFromEvent, draw, updateShapePreview]);
+
+  const handlePointerUp = useCallback(() => {
+    if (activeTool === "pencil") {
+      endDrawing();
+    } else if (activeTool.startsWith("shape-")) {
+      endShape();
+    }
+    // Add other tool end logic here (e.g., grab)
+  }, [activeTool, endDrawing, endShape]);
+
+  // --- Element Specific Handlers ---
+  const handleCanvasClick = (e: React.MouseEvent) => {
+    // Keep for tools that activate on simple click (sticky, text, stamp)
+    // Prevent activating these if a drag/draw just finished
+    if (!canvasRef.current || isDragging || isDrawing || isShapeDragging || currentPath.length > 0 || startShapePosition) return;
+
+    const point = getCoordinatesFromEvent(e);
+    if (!point) return;
+
+    if (activeTool === "sticky") addStickyNote(point.x, point.y);
+    else if (activeTool === "camera") fileInputRef.current?.click();
+    else if (activeTool === "text") addTextElement(point.x, point.y);
+    else if (activeTool === "stamp") addStampElement(point.x, point.y);
+    else if (activeTool === "select") setSelectedElement(null); // Deselect on canvas click
+  };
+
+  const handleElementPointerDown = (e: React.PointerEvent, id: string) => {
+     // Use PointerEvent for consistency
+    e.stopPropagation(); // Prevent canvas pointer down handler
+
+    if (activeTool === "eraser") {
+      deleteElement(id);
+    } else if (activeTool === "select") {
+      setSelectedElement(id);
+      bringToFront(id);
+      // Add logic here to initiate element dragging if needed
+    }
+    // Add grab tool logic here if elements should be grabbable
+  };
+
+  // --- Add Element Functions ---
   const addStickyNote = (x: number, y: number) => {
-    const newSticky: CanvasElement = {
-      id: `sticky-${Date.now()}`,
-      type: "sticky",
-      position: { x, y },
-      content: {
-        text: "New note...",
-        color: currentColor,
-        author: "You",
-      },
-      zIndex: nextZIndex,
-    }
+    const newSticky: CanvasElement = { id: `sticky-${Date.now()}`, type: "sticky", position: { x, y }, content: { text: "New note...", color: currentColor, author: "You" }, zIndex: nextZIndex };
+    setElements((prev) => [...prev, newSticky]);
+    setNextZIndex((prev) => prev + 1);
+    setSelectedElement(newSticky.id);
+  };
 
-    setElements([...elements, newSticky])
-    setNextZIndex(nextZIndex + 1)
-    setSelectedElement(newSticky.id)
-  }
-
-  // Add a text element
   const addTextElement = (x: number, y: number) => {
-    const newText: CanvasElement = {
-      id: `text-${Date.now()}`,
-      type: "text",
-      position: { x, y },
-      content: {
-        text: "Click to edit text",
-        fontSize: 16,
-        color: "#000000",
-      },
-      zIndex: nextZIndex,
-    }
+    const newText: CanvasElement = { id: `text-${Date.now()}`, type: "text", position: { x, y }, content: { text: "Click to edit text", fontSize: 16, color: "#000000" }, zIndex: nextZIndex };
+    setElements((prev) => [...prev, newText]);
+    setNextZIndex((prev) => prev + 1);
+    setSelectedElement(newText.id);
+  };
 
-    setElements([...elements, newText])
-    setNextZIndex(nextZIndex + 1)
-    setSelectedElement(newText.id)
-  }
-
-  // Add a stamp element
   const addStampElement = (x: number, y: number) => {
-    const stamps = ["❤️", "👍", "⭐", "✅", "🔥"]
-    const randomStamp = stamps[Math.floor(Math.random() * stamps.length)]
-
-    const newStamp: CanvasElement = {
-      id: `stamp-${Date.now()}`,
-      type: "stamp",
-      position: { x, y },
-      content: {
-        emoji: randomStamp,
-        size: 32,
-      },
-      zIndex: nextZIndex,
-    }
-
-    setElements([...elements, newStamp])
-    setNextZIndex(nextZIndex + 1)
-    setSelectedElement(newStamp.id)
-  }
+    const stamps = ["❤️", "👍", "⭐", "✅", "🔥"];
+    const randomStamp = stamps[Math.floor(Math.random() * stamps.length)];
+    const newStamp: CanvasElement = { id: `stamp-${Date.now()}`, type: "stamp", position: { x, y }, content: { emoji: randomStamp, size: 32 }, zIndex: nextZIndex };
+    setElements((prev) => [...prev, newStamp]);
+    setNextZIndex((prev) => prev + 1);
+    setSelectedElement(newStamp.id);
+  };
 
   // Handle file input change
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file || !canvasRef.current) return
-
-    const reader = new FileReader()
+    const file = e.target.files?.[0];
+    if (!file || !canvasRef.current) return;
+    const reader = new FileReader();
     reader.onload = (event) => {
       if (event.target?.result) {
-        // Get center of visible canvas
-        const rect = canvasRef.current!.getBoundingClientRect()
-        const centerX = (window.innerWidth / 2 - rect.left - position.x) / scale
-        const centerY = (window.innerHeight / 2 - position.y) / scale
-
-        const newImage: CanvasElement = {
-          id: `image-${Date.now()}`,
-          type: "image",
-          position: { x: centerX - 100, y: centerY - 100 },
-          content: {
-            src: event.target.result as string,
-            alt: file.name,
-            file: file,
-          },
-          zIndex: nextZIndex,
-        }
-
-        setElements([...elements, newImage])
-        setNextZIndex(nextZIndex + 1)
-        setSelectedElement(newImage.id)
+        const rect = canvasRef.current!.getBoundingClientRect();
+        const centerX = (window.innerWidth / 2 - rect.left - position.x) / scale;
+        const centerY = (window.innerHeight / 2 - position.y) / scale;
+        const newImage: CanvasElement = { id: `image-${Date.now()}`, type: "image", position: { x: centerX - 100, y: centerY - 100 }, content: { src: event.target.result as string, alt: file.name, file: file }, zIndex: nextZIndex };
+        setElements((prev) => [...prev, newImage]);
+        setNextZIndex((prev) => prev + 1);
+        setSelectedElement(newImage.id);
       }
-    }
-    reader.readAsDataURL(file)
+    };
+    reader.readAsDataURL(file);
+    e.target.value = ""; // Reset file input
+  };
 
-    // Reset file input
-    e.target.value = ""
-  }
-
-  // Bring element to front
+  // --- Element Management ---
   const bringToFront = (id: string) => {
-    setElements(elements.map((el) => (el.id === id ? { ...el, zIndex: nextZIndex } : el)))
-    setNextZIndex(nextZIndex + 1)
-    setSelectedElement(id)
-  }
+    setElements(elements.map((el) => (el.id === id ? { ...el, zIndex: nextZIndex } : el)));
+    setNextZIndex((prev) => prev + 1);
+    setSelectedElement(id);
+  };
 
-  // Update element content
   const updateElementContent = (id: string, newContent: any) => {
-    setElements(elements.map((el) => (el.id === id ? { ...el, content: { ...el.content, ...newContent } } : el)))
-  }
+    setElements(elements.map((el) => (el.id === id ? { ...el, content: { ...el.content, ...newContent } } : el)));
+  };
 
-  // Delete element
   const deleteElement = (id: string) => {
-    setElements(elements.filter((el) => el.id !== id))
-    setSelectedElement(null)
-  }
+    setElements(elements.filter((el) => el.id !== id));
+    setSelectedElement(null);
+  };
 
-  // Handle element click
-  const handleElementClick = (e: React.MouseEvent, id: string) => {
-    e.stopPropagation()
+  const updateElementPosition = (id: string, newPosition: Point) => {
+    setElements(elements.map((el) => (el.id === id ? { ...el, position: newPosition } : el)));
+  };
 
-    if (activeTool === "eraser") {
-      deleteElement(id)
-    } else {
-      setSelectedElement(id)
-      bringToFront(id)
-    }
-  }
 
   return (
     <div
       ref={canvasRef}
-      className="absolute h-[5000px] w-[5000px] bg-white"
+      className="absolute h-[5000px] w-[5000px] bg-white touch-none" // Added touch-none to prevent browser default touch actions
       style={{
         transform: `scale(${scale}) translate(${position.x / scale}px, ${position.y / scale}px)`,
         transformOrigin: "0 0",
         cursor: activeTool === "pencil" ? "crosshair" : activeTool === "eraser" ? "not-allowed" : "default",
       }}
-      onClick={handleCanvasClick}
-      onMouseMove={handleMouseMove}
-      onMouseDown={handleMouseDown}
-      onMouseUp={handleMouseUp}
-      onMouseLeave={handleMouseUp}
+      onClick={handleCanvasClick} // Keep for simple click tools
+      // Pointer events handle both mouse and touch
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerLeave={handlePointerUp} // Treat leaving the area as pointer up
     >
-      {/* Shape Preview */}
-      <ShapeHandler
-        activeTool={activeTool}
-        currentColor={currentColor}
-        scale={scale}
-        position={position}
-      />
+      {/* Shape Preview (Visible during shape drag) */}
+       {isShapeDragging && startShapePosition && (
+         <div style={shapeStyle} />
+       )}
 
       {/* Hidden file input for image upload */}
       <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
 
-      {/* Current drawing path */}
+      {/* Current drawing path (Live preview) */}
       {isDrawing && currentPath.length > 1 && (
         <svg className="absolute top-0 left-0 w-full h-full pointer-events-none">
           <path
@@ -390,120 +374,69 @@ export default function Canvas({ scale, position, activeTool, isDragging, curren
             stroke={currentColor}
             strokeWidth={currentStrokeWidth}
             fill="none"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           />
         </svg>
       )}
 
-      {/* Render all elements */}
+      {/* Render all finalized elements */}
       {elements.map((element) => {
         const isSelected = selectedElement === element.id
-        const style = {
+        // Base style, position is handled differently for drawing
+        const baseStyle = {
           position: "absolute" as const,
-          left: `${element.position.x}px`,
-          top: `${element.position.y}px`,
           zIndex: element.zIndex,
         }
+        // Specific style for non-drawing elements, applying position
+        const elementStyle = element.type !== 'drawing' ? {
+            ...baseStyle,
+            left: `${element.position.x}px`,
+            top: `${element.position.y}px`,
+        } : baseStyle; // DrawingCanvas calculates its own position
 
         // Delete button for selected element
         const deleteButton =
           isSelected && activeTool === "select" ? (
             <button
-              key={element.id}
-              className="absolute -top-4 -right-4 bg-red-500 text-white rounded-full p-1 shadow-md z-10"
-              onClick={(e) => {
-                e.stopPropagation()
-                deleteElement(element.id)
+              key={`${element.id}-delete`} // Ensure unique key
+              className="absolute -top-4 -right-4 bg-red-500 text-white rounded-full p-1 shadow-md z-50" // Higher z-index
+              onPointerDown={(e) => { // Use onPointerDown
+                e.stopPropagation();
+                deleteElement(element.id);
               }}
             >
               <Trash2 className="h-4 w-4" />
             </button>
           ) : null
 
-        switch (element.type) {
-          case "sticky":
-            return (
-              <div key={element.id} className="relative" onClick={(e) => handleElementClick(e, element.id)}>
-                {deleteButton}
-                <StickyNoteElement
-                  id={element.id}
-                  style={style}
-                  content={element.content}
-                  isSelected={isSelected}
-                  onBringToFront={() => bringToFront(element.id)}
-                  onPositionChange={(newPos) => updateElementPosition(element.id, newPos)}
-                  onContentChange={(newContent) => updateElementContent(element.id, newContent)}
-                  canDrag={activeTool === "select"}
-                />
-              </div>
-            )
-          case "image":
-            return (
-              <div key={element.id} className="relative" onClick={(e) => handleElementClick(e, element.id)}>
-                {deleteButton}
-                <ImageElement
-                  id={element.id}
-                  style={style}
-                  content={element.content}
-                  isSelected={isSelected}
-                  onBringToFront={() => bringToFront(element.id)}
-                  onPositionChange={(newPos) => updateElementPosition(element.id, newPos)}
-                  canDrag={activeTool === "select"}
-                />
-              </div>
-            )
-          case "text":
-            return (
-              <div key={element.id} className="relative" onClick={(e) => handleElementClick(e, element.id)}>
-                {deleteButton}
-                <TextElement
-                  id={element.id}
-                  style={style}
-                  content={element.content}
-                  isSelected={isSelected}
-                  onBringToFront={() => bringToFront(element.id)}
-                  onPositionChange={(newPos) => updateElementPosition(element.id, newPos)}
-                  onContentChange={(newContent) => updateElementContent(element.id, newContent)}
-                  canDrag={activeTool === "select"}
-                />
-              </div>
-            )
-          case "drawing":
-            return (
-              <div key={element.id} className="relative" onClick={(e) => handleElementClick(e, element.id)}>
-                {deleteButton}
-                <DrawingCanvas id={element.id} style={style} content={element.content} isSelected={isSelected} />
-              </div>
-            )
-          case "stamp":
-            return (
-              <div key={element.id} className="relative" onClick={(e) => handleElementClick(e, element.id)}>
-                {deleteButton}
-                <StampElement
-                  id={element.id}
-                  style={style}
-                  content={element.content}
-                  isSelected={isSelected}
-                  onBringToFront={() => bringToFront(element.id)}
-                  onPositionChange={(newPos) => updateElementPosition(element.id, newPos)}
-                  canDrag={activeTool === "select"}
-                />
-              </div>
-            )
-          case "shape":
-            return (
-              <div key={element.id} className="relative" onClick={(e) => handleElementClick(e, element.id)}>
-                {deleteButton}
-                <ShapeElement
-                  id={element.id}
-                  style={style}
-                  content={element.content}
-                  isSelected={isSelected}
-                />
-              </div>
-            )
-          default:
-            return null
-        }
+        // Wrapper div for positioning and event handling
+        const wrapperStyle = element.type === 'drawing' ? baseStyle : elementStyle;
+
+        return (
+            <div key={element.id} className="relative" style={wrapperStyle} onPointerDown={(e) => handleElementPointerDown(e, element.id)}>
+                 {deleteButton}
+                 {(() => {
+                    switch (element.type) {
+                        case "sticky":
+                            return <StickyNoteElement id={element.id} style={elementStyle} content={element.content} isSelected={isSelected} onBringToFront={() => bringToFront(element.id)} onPositionChange={(newPos) => updateElementPosition(element.id, newPos)} onContentChange={(newContent) => updateElementContent(element.id, newContent)} canDrag={activeTool === "select"} />;
+                        case "image":
+                            return <ImageElement id={element.id} style={elementStyle} content={element.content} isSelected={isSelected} onBringToFront={() => bringToFront(element.id)} onPositionChange={(newPos) => updateElementPosition(element.id, newPos)} canDrag={activeTool === "select"} />;
+                        case "text":
+                            return <TextElement id={element.id} style={elementStyle} content={element.content} isSelected={isSelected} onBringToFront={() => bringToFront(element.id)} onPositionChange={(newPos) => updateElementPosition(element.id, newPos)} onContentChange={(newContent) => updateElementContent(element.id, newContent)} canDrag={activeTool === "select"} />;
+                        case "drawing":
+                            // Pass baseStyle as DrawingCanvas handles its own positioning via SVG coords
+                            return <DrawingCanvas id={element.id} style={baseStyle} content={element.content} isSelected={isSelected} />;
+                        case "stamp":
+                            return <StampElement id={element.id} style={elementStyle} content={element.content} isSelected={isSelected} onBringToFront={() => bringToFront(element.id)} onPositionChange={(newPos) => updateElementPosition(element.id, newPos)} canDrag={activeTool === "select"} />;
+                        case "shape":
+                            return <ShapeElement id={element.id} style={elementStyle} content={element.content} isSelected={isSelected} />;
+                        default:
+                            return null;
+                    }
+                 })()}
+            </div>
+        )
       })}
     </div >
   )

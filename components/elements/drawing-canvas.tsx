@@ -1,6 +1,6 @@
 "use client"
 
-import type React from "react"
+import React, { useEffect } from "react" // Import useEffect
 
 interface DrawingCanvasProps {
   id: string
@@ -14,6 +14,10 @@ interface DrawingCanvasProps {
 }
 
 export default function DrawingCanvas({ id, style, content, isSelected }: DrawingCanvasProps) {
+  useEffect(() => {
+    console.log(`DrawingCanvas ${id} rendered with path length: ${content.path.length}`);
+  }, [id, content.path]); // Log when component renders or path changes significantly
+
   const { path, color, strokeWidth } = content
 
   if (path.length < 2) return null
@@ -57,4 +61,3 @@ export default function DrawingCanvas({ id, style, content, isSelected }: Drawin
     </div>
   )
 }
-
