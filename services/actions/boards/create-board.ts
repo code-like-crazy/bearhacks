@@ -20,13 +20,13 @@ export const createBoard = async (
       };
     }
 
-    const [newboard] = await db
+    const [newBoard] = await db
       .insert(boards)
       .values({
         id: nanoid(),
         name,
         imageUrl,
-        inviteCode: inviteCode ?? nanoid(),
+        inviteCode: inviteCode ?? nanoid().slice(0, 6),
         creatorId: user.id,
         createdAt: Date.now(),
       })
@@ -35,7 +35,7 @@ export const createBoard = async (
     await db
       .insert(boardMembers)
       .values({
-        boardId: newboard.id,
+        boardId: newBoard.id,
         userId: user.id,
       })
       .catch(() => {

@@ -1,10 +1,7 @@
 "use server";
 
 import { getCurrentUser } from "@/auth";
-import { eq } from "drizzle-orm";
-
-import { db } from "@/lib/db";
-import { boardMembers, boards } from "@/lib/db/schema";
+import { getBoardById, joinBoardById } from "@/services/board";
 
 export const joinBoard = async (boardId: string, inviteCode: string) => {
   try {
@@ -16,10 +13,7 @@ export const joinBoard = async (boardId: string, inviteCode: string) => {
       };
     }
 
-    const [existingBoard] = await db
-      .select()
-      .from(boards)
-      .where(eq(boards.id, boardId));
+    const existingBoard = await getBoardById(boardId);
 
     if (!existingBoard) {
       return {
@@ -27,17 +21,21 @@ export const joinBoard = async (boardId: string, inviteCode: string) => {
       };
     }
 
-    await db
-      .insert(boardMembers)
-      .values({
-        boardId: boardId,
-        userId: user.id,
-      })
-      .catch(() => {
-        return {
-          error: "Failed to join board, you may already be a member.",
-        };
-      });
+    if (existingBoard.inviteCode !== inviteCode) {
+      console.error(
+        `User "${user.name}" tried to join board "${existingBoard.name}" with an invalid invite code.`,
+      );
+
+      return {
+        error: "Invalid invite code or board does not exist.",
+      };
+    }
+
+    await joinBoardById(boardId, user.id).catch(() => {
+      return {
+        error: "Failed to join board, you may already be a member.",
+      };
+    });
 
     return {
       success: true,
