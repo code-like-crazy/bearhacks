@@ -1,41 +1,46 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
 interface DrawingCanvasProps {
-  id: string
-  style: React.CSSProperties
+  id: string;
+  style: React.CSSProperties;
   content: {
-    path: { x: number; y: number }[]
-    color: string
-    strokeWidth: number
-  }
-  isSelected: boolean
+    path: { x: number; y: number }[];
+    color: string;
+    strokeWidth: number;
+  };
+  isSelected: boolean;
 }
 
-export default function DrawingCanvas({ id, style, content, isSelected }: DrawingCanvasProps) {
-  const { path, color, strokeWidth } = content
+export default function DrawingCanvas({
+  id,
+  style,
+  content,
+  isSelected,
+}: DrawingCanvasProps) {
+  const { path, color, strokeWidth } = content;
 
-  if (path.length < 2) return null
+  if (path.length < 2) return null;
 
   // Calculate the bounding box of the path
-  const minX = Math.min(...path.map((p) => p.x))
-  const minY = Math.min(...path.map((p) => p.y))
-  const maxX = Math.max(...path.map((p) => p.x))
-  const maxY = Math.max(...path.map((p) => p.y))
+  const minX = Math.min(...path.map((p) => p.x));
+  const minY = Math.min(...path.map((p) => p.y));
+  const maxX = Math.max(...path.map((p) => p.x));
+  const maxY = Math.max(...path.map((p) => p.y));
 
-  const width = maxX - minX + strokeWidth * 2
-  const height = maxY - minY + strokeWidth * 2
+  const width = maxX - minX + strokeWidth * 2;
+  const height = maxY - minY + strokeWidth * 2;
 
   // Adjust the path to be relative to the SVG
   const adjustedPath = path.map((p) => ({
     x: p.x - minX + strokeWidth,
     y: p.y - minY + strokeWidth,
-  }))
+  }));
 
   return (
     <div
-      className={`absolute ${isSelected ? "ring-2 ring-primary" : ""}`}
+      className={`absolute ${isSelected ? "ring-primary ring-2" : ""}`}
       style={{
         ...style,
         left: `${minX - strokeWidth}px`,
@@ -55,6 +60,5 @@ export default function DrawingCanvas({ id, style, content, isSelected }: Drawin
         />
       </svg>
     </div>
-  )
+  );
 }
-

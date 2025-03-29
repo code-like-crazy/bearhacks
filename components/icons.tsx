@@ -1,11 +1,4 @@
-import {
-  File,
-  Camera,
-  Pencil,
-  List,
-  Eraser,
-  Download,
-} from "lucide-react";
+import { Camera, Download, Eraser, File, List, Pencil } from "lucide-react";
 
 export const Icons = {
   file: File,

@@ -1,23 +1,23 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
+import { useState } from "react";
+import Image from "next/image";
 
-import { useState } from "react"
-import Image from "next/image"
-import { Card } from "@/components/ui/card"
+import { Card } from "@/components/ui/card";
 
 interface ImageElementProps {
-  id: string
-  style: React.CSSProperties
+  id: string;
+  style: React.CSSProperties;
   content: {
-    src: string
-    alt: string
-    caption?: string
-  }
-  isSelected: boolean
-  onBringToFront: () => void
-  onPositionChange: (position: { x: number; y: number }) => void
-  canDrag: boolean
+    src: string;
+    alt: string;
+    caption?: string;
+  };
+  isSelected: boolean;
+  onBringToFront: () => void;
+  onPositionChange: (position: { x: number; y: number }) => void;
+  canDrag: boolean;
 }
 
 export default function ImageElement({
@@ -29,40 +29,40 @@ export default function ImageElement({
   onPositionChange,
   canDrag,
 }: ImageElementProps) {
-  const [isDragging, setIsDragging] = useState(false)
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
 
   const handleMouseDown = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    onBringToFront()
+    e.stopPropagation();
+    onBringToFront();
 
-    if (!canDrag) return
+    if (!canDrag) return;
 
-    setIsDragging(true)
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect()
+    setIsDragging(true);
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
     setDragOffset({
       x: e.clientX - rect.left,
       y: e.clientY - rect.top,
-    })
-  }
+    });
+  };
 
   const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging) return
-    e.stopPropagation()
+    if (!isDragging) return;
+    e.stopPropagation();
 
-    const x = e.clientX - dragOffset.x
-    const y = e.clientY - dragOffset.y
+    const x = e.clientX - dragOffset.x;
+    const y = e.clientY - dragOffset.y;
 
-    onPositionChange({ x, y })
-  }
+    onPositionChange({ x, y });
+  };
 
   const handleMouseUp = () => {
-    setIsDragging(false)
-  }
+    setIsDragging(false);
+  };
 
   return (
     <Card
-      className={`p-2 shadow-md overflow-hidden ${isSelected ? "ring-2 ring-primary" : ""}`}
+      className={`overflow-hidden p-2 shadow-md ${isSelected ? "ring-primary ring-2" : ""}`}
       style={{
         ...style,
         cursor: isDragging ? "grabbing" : canDrag ? "grab" : "default",
@@ -80,9 +80,10 @@ export default function ImageElement({
           height={200}
           className="rounded-md"
         />
-        {content.caption && <div className="mt-1 text-center text-sm">{content.caption}</div>}
+        {content.caption && (
+          <div className="mt-1 text-center text-sm">{content.caption}</div>
+        )}
       </div>
     </Card>
-  )
+  );
 }
-

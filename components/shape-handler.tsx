@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState } from "react";
+
 import { ToolType } from "@/lib/types";
 
 interface ShapeHandlerProps {
@@ -10,15 +11,34 @@ interface ShapeHandlerProps {
   position: { x: number; y: number };
 }
 
-const ShapeHandler: React.FC<ShapeHandlerProps> = ({ activeTool, currentColor, scale, position }) => {
-  const [startPosition, setStartPosition] = useState<{ x: number, y: number } | null>(null);
-  const [currentPosition, setCurrentPosition] = useState<{ x: number, y: number } | null>(null);
-  const [shapeType, setShapeType] = useState<"square" | "circle" | "triangle" | "diamond" | null>(null);
+const ShapeHandler: React.FC<ShapeHandlerProps> = ({
+  activeTool,
+  currentColor,
+  scale,
+  position,
+}) => {
+  const [startPosition, setStartPosition] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
+  const [currentPosition, setCurrentPosition] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
+  const [shapeType, setShapeType] = useState<
+    "square" | "circle" | "triangle" | "diamond" | null
+  >(null);
   const [size, setSize] = useState(50);
 
   useEffect(() => {
     if (activeTool?.startsWith("shape-")) {
-      setShapeType(activeTool.split("-")[1] as "square" | "circle" | "triangle" | "diamond");
+      setShapeType(
+        activeTool.split("-")[1] as
+          | "square"
+          | "circle"
+          | "triangle"
+          | "diamond",
+      );
     } else {
       setShapeType(null);
     }
@@ -61,13 +81,7 @@ const ShapeHandler: React.FC<ShapeHandlerProps> = ({ activeTool, currentColor, s
     pointerEvents: "none" as const,
   };
 
-  return (
-    <div
-      style={style}
-    >
-      {shapeType}
-    </div>
-  );
+  return <div style={style}>{shapeType}</div>;
 };
 
 export default ShapeHandler;

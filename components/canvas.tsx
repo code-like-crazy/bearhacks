@@ -1,35 +1,42 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
+import { useRef, useState } from "react";
+import { Trash2 } from "lucide-react";
 
-import { useRef, useState } from "react"
-import type { ToolType } from "@/lib/types"
-import StickyNoteElement from "./elements/sticky-note"
-import ImageElement from "./elements/image-element"
-import TextElement from "./elements/text-element"
-import DrawingCanvas from "./elements/drawing-canvas"
-import StampElement from "./elements/stamp-element"
-import ShapeElement from "./elements/shape-element"
-import ShapeHandler from "./shape-handler"
-import { Trash2 } from "lucide-react"
+import type { ToolType } from "@/lib/types";
+
+import DrawingCanvas from "./elements/drawing-canvas";
+import ImageElement from "./elements/image-element";
+import ShapeElement from "./elements/shape-element";
+import StampElement from "./elements/stamp-element";
+import StickyNoteElement from "./elements/sticky-note";
+import TextElement from "./elements/text-element";
+import ShapeHandler from "./shape-handler";
 
 interface CanvasProps {
-  scale: number
-  position: { x: number; y: number }
-  activeTool: ToolType
-  isDragging: boolean
-  currentColor: string
+  scale: number;
+  position: { x: number; y: number };
+  activeTool: ToolType;
+  isDragging: boolean;
+  currentColor: string;
 }
 
 export interface CanvasElement {
-  id: string
-  type: "sticky" | "image" | "text" | "drawing" | "stamp" | "shape"
-  position: { x: number; y: number }
-  content: any
-  zIndex: number
+  id: string;
+  type: "sticky" | "image" | "text" | "drawing" | "stamp" | "shape";
+  position: { x: number; y: number };
+  content: any;
+  zIndex: number;
 }
 
-export default function Canvas({ scale, position, activeTool, isDragging, currentColor }: CanvasProps) {
+export default function Canvas({
+  scale,
+  position,
+  activeTool,
+  isDragging,
+  currentColor,
+}: CanvasProps) {
   const [elements, setElements] = useState<CanvasElement[]>([
     {
       id: "sticky-1",
@@ -53,21 +60,31 @@ export default function Canvas({ scale, position, activeTool, isDragging, curren
       },
       zIndex: 2,
     },
-  ])
+  ]);
 
-  const canvasRef = useRef<HTMLDivElement>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
-  const [nextZIndex, setNextZIndex] = useState(3)
-  const [selectedElement, setSelectedElement] = useState<string | null>(null)
-  const [currentShape, setCurrentShape] = useState<"square" | "circle" | "triangle" | "diamond">("square")
-  const [isDrawing, setIsDrawing] = useState(false)
-  const [startShapePosition, setStartShapePosition] = useState<{ x: number; y: number } | null>(null)
-  const [currentShapeSize, setCurrentShapeSize] = useState<number>(50)
-  const [isShapeDragging, setIsShapeDragging] = useState(false)
-  const [currentShapeType, setCurrentShapeType] = useState<"square" | "circle" | "triangle" | "diamond">("square")
-  const [shapePreview, setShapePreview] = useState<CanvasElement | null>(null)
-  const [cursorPosition, setCursorPosition] = useState<{ x: number; y: number } | null>(null)
-  const [isCursorPreviewVisible, setIsCursorPreviewVisible] = useState(false)
+  const canvasRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [nextZIndex, setNextZIndex] = useState(3);
+  const [selectedElement, setSelectedElement] = useState<string | null>(null);
+  const [currentShape, setCurrentShape] = useState<
+    "square" | "circle" | "triangle" | "diamond"
+  >("square");
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [startShapePosition, setStartShapePosition] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
+  const [currentShapeSize, setCurrentShapeSize] = useState<number>(50);
+  const [isShapeDragging, setIsShapeDragging] = useState(false);
+  const [currentShapeType, setCurrentShapeType] = useState<
+    "square" | "circle" | "triangle" | "diamond"
+  >("square");
+  const [shapePreview, setShapePreview] = useState<CanvasElement | null>(null);
+  const [cursorPosition, setCursorPosition] = useState<{
+    x: number;
+    y: number;
+  } | null>(null);
+  const [isCursorPreviewVisible, setIsCursorPreviewVisible] = useState(false);
   const [shapeStyle, setShapeStyle] = useState<React.CSSProperties>({
     width: 50,
     height: 50,
@@ -78,8 +95,10 @@ export default function Canvas({ scale, position, activeTool, isDragging, curren
     pointerEvents: "none",
   });
 
-  const [currentPath, setCurrentPath] = useState<{ x: number; y: number }[]>([])
-  const [currentStrokeWidth, setCurrentStrokeWidth] = useState(2)
+  const [currentPath, setCurrentPath] = useState<{ x: number; y: number }[]>(
+    [],
+  );
+  const [currentStrokeWidth, setCurrentStrokeWidth] = useState(2);
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!canvasRef.current) return;
@@ -90,8 +109,15 @@ export default function Canvas({ scale, position, activeTool, isDragging, curren
 
     setCursorPosition({ x, y });
 
-    if (activeTool.startsWith("shape-") && isShapeDragging && startShapePosition) {
-      const size = Math.max(Math.abs(x - startShapePosition.x), Math.abs(y - startShapePosition.y));
+    if (
+      activeTool.startsWith("shape-") &&
+      isShapeDragging &&
+      startShapePosition
+    ) {
+      const size = Math.max(
+        Math.abs(x - startShapePosition.x),
+        Math.abs(y - startShapePosition.y),
+      );
       setCurrentShapeSize(size);
       setShapeStyle({
         width: size,
@@ -153,15 +179,15 @@ export default function Canvas({ scale, position, activeTool, isDragging, curren
   };
 
   const handleMouseUp = () => {
-    if (startShapePosition && cursorPosition && activeTool.startsWith("shape-")) {
+    if (
+      startShapePosition &&
+      cursorPosition &&
+      activeTool.startsWith("shape-")
+    ) {
       const shape = currentShapeType;
       const x = startShapePosition.x;
       const y = startShapePosition.y;
-      addShapeElement(
-        x,
-        y,
-        shape
-      );
+      addShapeElement(x, y, shape);
       setStartShapePosition(null);
       setIsShapeDragging(false);
       setShapeStyle({
@@ -176,7 +202,11 @@ export default function Canvas({ scale, position, activeTool, isDragging, curren
     }
   };
 
-  const addShapeElement = (x: number, y: number, shape: "square" | "circle" | "triangle" | "diamond") => {
+  const addShapeElement = (
+    x: number,
+    y: number,
+    shape: "square" | "circle" | "triangle" | "diamond",
+  ) => {
     const newShape: CanvasElement = {
       id: `shape-${Date.now()}`,
       type: "shape",
@@ -194,19 +224,26 @@ export default function Canvas({ scale, position, activeTool, isDragging, curren
     setSelectedElement(newShape.id);
   };
 
-  const updateElementPosition = (id: string, newPosition: { x: number; y: number }) => {
-    setElements(elements.map((el) => (el.id === id ? { ...el, position: newPosition } : el)));
+  const updateElementPosition = (
+    id: string,
+    newPosition: { x: number; y: number },
+  ) => {
+    setElements(
+      elements.map((el) =>
+        el.id === id ? { ...el, position: newPosition } : el,
+      ),
+    );
   };
 
   const handleMouseMoveForDrawing = (e: React.MouseEvent) => {
-    if (!isDrawing || !canvasRef.current) return
+    if (!isDrawing || !canvasRef.current) return;
 
-    const rect = canvasRef.current.getBoundingClientRect()
-    const x = (e.clientX - rect.left - position.x) / scale
-    const y = (e.clientY - rect.top - position.y) / scale
+    const rect = canvasRef.current.getBoundingClientRect();
+    const x = (e.clientX - rect.left - position.x) / scale;
+    const y = (e.clientY - rect.top - position.y) / scale;
 
-    setCurrentPath([...currentPath, { x, y }])
-  }
+    setCurrentPath([...currentPath, { x, y }]);
+  };
 
   const handleMouseUpForDrawing = () => {
     if (isDrawing && currentPath.length > 1) {
@@ -221,15 +258,15 @@ export default function Canvas({ scale, position, activeTool, isDragging, curren
           strokeWidth: currentStrokeWidth,
         },
         zIndex: nextZIndex,
-      }
+      };
 
-      setElements([...elements, newDrawing])
-      setNextZIndex(nextZIndex + 1)
+      setElements([...elements, newDrawing]);
+      setNextZIndex(nextZIndex + 1);
     }
 
-    setIsDrawing(false)
-    setCurrentPath([])
-  }
+    setIsDrawing(false);
+    setCurrentPath([]);
+  };
 
   // Add a sticky note
   const addStickyNote = (x: number, y: number) => {
@@ -243,12 +280,12 @@ export default function Canvas({ scale, position, activeTool, isDragging, curren
         author: "You",
       },
       zIndex: nextZIndex,
-    }
+    };
 
-    setElements([...elements, newSticky])
-    setNextZIndex(nextZIndex + 1)
-    setSelectedElement(newSticky.id)
-  }
+    setElements([...elements, newSticky]);
+    setNextZIndex(nextZIndex + 1);
+    setSelectedElement(newSticky.id);
+  };
 
   // Add a text element
   const addTextElement = (x: number, y: number) => {
@@ -262,17 +299,17 @@ export default function Canvas({ scale, position, activeTool, isDragging, curren
         color: "#000000",
       },
       zIndex: nextZIndex,
-    }
+    };
 
-    setElements([...elements, newText])
-    setNextZIndex(nextZIndex + 1)
-    setSelectedElement(newText.id)
-  }
+    setElements([...elements, newText]);
+    setNextZIndex(nextZIndex + 1);
+    setSelectedElement(newText.id);
+  };
 
   // Add a stamp element
   const addStampElement = (x: number, y: number) => {
-    const stamps = ["❤️", "👍", "⭐", "✅", "🔥"]
-    const randomStamp = stamps[Math.floor(Math.random() * stamps.length)]
+    const stamps = ["❤️", "👍", "⭐", "✅", "🔥"];
+    const randomStamp = stamps[Math.floor(Math.random() * stamps.length)];
 
     const newStamp: CanvasElement = {
       id: `stamp-${Date.now()}`,
@@ -283,25 +320,26 @@ export default function Canvas({ scale, position, activeTool, isDragging, curren
         size: 32,
       },
       zIndex: nextZIndex,
-    }
+    };
 
-    setElements([...elements, newStamp])
-    setNextZIndex(nextZIndex + 1)
-    setSelectedElement(newStamp.id)
-  }
+    setElements([...elements, newStamp]);
+    setNextZIndex(nextZIndex + 1);
+    setSelectedElement(newStamp.id);
+  };
 
   // Handle file input change
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file || !canvasRef.current) return
+    const file = e.target.files?.[0];
+    if (!file || !canvasRef.current) return;
 
-    const reader = new FileReader()
+    const reader = new FileReader();
     reader.onload = (event) => {
       if (event.target?.result) {
         // Get center of visible canvas
-        const rect = canvasRef.current!.getBoundingClientRect()
-        const centerX = (window.innerWidth / 2 - rect.left - position.x) / scale
-        const centerY = (window.innerHeight / 2 - position.y) / scale
+        const rect = canvasRef.current!.getBoundingClientRect();
+        const centerX =
+          (window.innerWidth / 2 - rect.left - position.x) / scale;
+        const centerY = (window.innerHeight / 2 - position.y) / scale;
 
         const newImage: CanvasElement = {
           id: `image-${Date.now()}`,
@@ -313,48 +351,56 @@ export default function Canvas({ scale, position, activeTool, isDragging, curren
             file: file,
           },
           zIndex: nextZIndex,
-        }
+        };
 
-        setElements([...elements, newImage])
-        setNextZIndex(nextZIndex + 1)
-        setSelectedElement(newImage.id)
+        setElements([...elements, newImage]);
+        setNextZIndex(nextZIndex + 1);
+        setSelectedElement(newImage.id);
       }
-    }
-    reader.readAsDataURL(file)
+    };
+    reader.readAsDataURL(file);
 
     // Reset file input
-    e.target.value = ""
-  }
+    e.target.value = "";
+  };
 
   // Bring element to front
   const bringToFront = (id: string) => {
-    setElements(elements.map((el) => (el.id === id ? { ...el, zIndex: nextZIndex } : el)))
-    setNextZIndex(nextZIndex + 1)
-    setSelectedElement(id)
-  }
+    setElements(
+      elements.map((el) => (el.id === id ? { ...el, zIndex: nextZIndex } : el)),
+    );
+    setNextZIndex(nextZIndex + 1);
+    setSelectedElement(id);
+  };
 
   // Update element content
   const updateElementContent = (id: string, newContent: any) => {
-    setElements(elements.map((el) => (el.id === id ? { ...el, content: { ...el.content, ...newContent } } : el)))
-  }
+    setElements(
+      elements.map((el) =>
+        el.id === id
+          ? { ...el, content: { ...el.content, ...newContent } }
+          : el,
+      ),
+    );
+  };
 
   // Delete element
   const deleteElement = (id: string) => {
-    setElements(elements.filter((el) => el.id !== id))
-    setSelectedElement(null)
-  }
+    setElements(elements.filter((el) => el.id !== id));
+    setSelectedElement(null);
+  };
 
   // Handle element click
   const handleElementClick = (e: React.MouseEvent, id: string) => {
-    e.stopPropagation()
+    e.stopPropagation();
 
     if (activeTool === "eraser") {
-      deleteElement(id)
+      deleteElement(id);
     } else {
-      setSelectedElement(id)
-      bringToFront(id)
+      setSelectedElement(id);
+      bringToFront(id);
     }
-  }
+  };
 
   return (
     <div
@@ -363,7 +409,12 @@ export default function Canvas({ scale, position, activeTool, isDragging, curren
       style={{
         transform: `scale(${scale}) translate(${position.x / scale}px, ${position.y / scale}px)`,
         transformOrigin: "0 0",
-        cursor: activeTool === "pencil" ? "crosshair" : activeTool === "eraser" ? "not-allowed" : "default",
+        cursor:
+          activeTool === "pencil"
+            ? "crosshair"
+            : activeTool === "eraser"
+              ? "not-allowed"
+              : "default",
       }}
       onClick={handleCanvasClick}
       onMouseMove={handleMouseMove}
@@ -380,11 +431,17 @@ export default function Canvas({ scale, position, activeTool, isDragging, curren
       />
 
       {/* Hidden file input for image upload */}
-      <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleFileChange} />
+      <input
+        type="file"
+        ref={fileInputRef}
+        className="hidden"
+        accept="image/*"
+        onChange={handleFileChange}
+      />
 
       {/* Current drawing path */}
       {isDrawing && currentPath.length > 1 && (
-        <svg className="absolute top-0 left-0 w-full h-full pointer-events-none">
+        <svg className="pointer-events-none absolute top-0 left-0 h-full w-full">
           <path
             d={`M ${currentPath.map((p) => `${p.x},${p.y}`).join(" L ")}`}
             stroke={currentColor}
@@ -396,33 +453,37 @@ export default function Canvas({ scale, position, activeTool, isDragging, curren
 
       {/* Render all elements */}
       {elements.map((element) => {
-        const isSelected = selectedElement === element.id
+        const isSelected = selectedElement === element.id;
         const style = {
           position: "absolute" as const,
           left: `${element.position.x}px`,
           top: `${element.position.y}px`,
           zIndex: element.zIndex,
-        }
+        };
 
         // Delete button for selected element
         const deleteButton =
           isSelected && activeTool === "select" ? (
             <button
               key={element.id}
-              className="absolute -top-4 -right-4 bg-red-500 text-white rounded-full p-1 shadow-md z-10"
+              className="absolute -top-4 -right-4 z-10 rounded-full bg-red-500 p-1 text-white shadow-md"
               onClick={(e) => {
-                e.stopPropagation()
-                deleteElement(element.id)
+                e.stopPropagation();
+                deleteElement(element.id);
               }}
             >
               <Trash2 className="h-4 w-4" />
             </button>
-          ) : null
+          ) : null;
 
         switch (element.type) {
           case "sticky":
             return (
-              <div key={element.id} className="relative" onClick={(e) => handleElementClick(e, element.id)}>
+              <div
+                key={element.id}
+                className="relative"
+                onClick={(e) => handleElementClick(e, element.id)}
+              >
                 {deleteButton}
                 <StickyNoteElement
                   id={element.id}
@@ -430,15 +491,23 @@ export default function Canvas({ scale, position, activeTool, isDragging, curren
                   content={element.content}
                   isSelected={isSelected}
                   onBringToFront={() => bringToFront(element.id)}
-                  onPositionChange={(newPos) => updateElementPosition(element.id, newPos)}
-                  onContentChange={(newContent) => updateElementContent(element.id, newContent)}
+                  onPositionChange={(newPos) =>
+                    updateElementPosition(element.id, newPos)
+                  }
+                  onContentChange={(newContent) =>
+                    updateElementContent(element.id, newContent)
+                  }
                   canDrag={activeTool === "select"}
                 />
               </div>
-            )
+            );
           case "image":
             return (
-              <div key={element.id} className="relative" onClick={(e) => handleElementClick(e, element.id)}>
+              <div
+                key={element.id}
+                className="relative"
+                onClick={(e) => handleElementClick(e, element.id)}
+              >
                 {deleteButton}
                 <ImageElement
                   id={element.id}
@@ -446,14 +515,20 @@ export default function Canvas({ scale, position, activeTool, isDragging, curren
                   content={element.content}
                   isSelected={isSelected}
                   onBringToFront={() => bringToFront(element.id)}
-                  onPositionChange={(newPos) => updateElementPosition(element.id, newPos)}
+                  onPositionChange={(newPos) =>
+                    updateElementPosition(element.id, newPos)
+                  }
                   canDrag={activeTool === "select"}
                 />
               </div>
-            )
+            );
           case "text":
             return (
-              <div key={element.id} className="relative" onClick={(e) => handleElementClick(e, element.id)}>
+              <div
+                key={element.id}
+                className="relative"
+                onClick={(e) => handleElementClick(e, element.id)}
+              >
                 {deleteButton}
                 <TextElement
                   id={element.id}
@@ -461,22 +536,39 @@ export default function Canvas({ scale, position, activeTool, isDragging, curren
                   content={element.content}
                   isSelected={isSelected}
                   onBringToFront={() => bringToFront(element.id)}
-                  onPositionChange={(newPos) => updateElementPosition(element.id, newPos)}
-                  onContentChange={(newContent) => updateElementContent(element.id, newContent)}
+                  onPositionChange={(newPos) =>
+                    updateElementPosition(element.id, newPos)
+                  }
+                  onContentChange={(newContent) =>
+                    updateElementContent(element.id, newContent)
+                  }
                   canDrag={activeTool === "select"}
                 />
               </div>
-            )
+            );
           case "drawing":
             return (
-              <div key={element.id} className="relative" onClick={(e) => handleElementClick(e, element.id)}>
+              <div
+                key={element.id}
+                className="relative"
+                onClick={(e) => handleElementClick(e, element.id)}
+              >
                 {deleteButton}
-                <DrawingCanvas id={element.id} style={style} content={element.content} isSelected={isSelected} />
+                <DrawingCanvas
+                  id={element.id}
+                  style={style}
+                  content={element.content}
+                  isSelected={isSelected}
+                />
               </div>
-            )
+            );
           case "stamp":
             return (
-              <div key={element.id} className="relative" onClick={(e) => handleElementClick(e, element.id)}>
+              <div
+                key={element.id}
+                className="relative"
+                onClick={(e) => handleElementClick(e, element.id)}
+              >
                 {deleteButton}
                 <StampElement
                   id={element.id}
@@ -484,14 +576,20 @@ export default function Canvas({ scale, position, activeTool, isDragging, curren
                   content={element.content}
                   isSelected={isSelected}
                   onBringToFront={() => bringToFront(element.id)}
-                  onPositionChange={(newPos) => updateElementPosition(element.id, newPos)}
+                  onPositionChange={(newPos) =>
+                    updateElementPosition(element.id, newPos)
+                  }
                   canDrag={activeTool === "select"}
                 />
               </div>
-            )
+            );
           case "shape":
             return (
-              <div key={element.id} className="relative" onClick={(e) => handleElementClick(e, element.id)}>
+              <div
+                key={element.id}
+                className="relative"
+                onClick={(e) => handleElementClick(e, element.id)}
+              >
                 {deleteButton}
                 <ShapeElement
                   id={element.id}
@@ -500,11 +598,11 @@ export default function Canvas({ scale, position, activeTool, isDragging, curren
                   isSelected={isSelected}
                 />
               </div>
-            )
+            );
           default:
-            return null
+            return null;
         }
       })}
-    </div >
-  )
+    </div>
+  );
 }

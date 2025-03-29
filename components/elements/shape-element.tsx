@@ -1,20 +1,25 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
 interface ShapeElementProps {
-  id: string
-  style: React.CSSProperties
+  id: string;
+  style: React.CSSProperties;
   content: {
-    shape: "square" | "circle" | "triangle" | "diamond"
-    color: string
-    size: number
-  }
-  isSelected: boolean
+    shape: "square" | "circle" | "triangle" | "diamond";
+    color: string;
+    size: number;
+  };
+  isSelected: boolean;
 }
 
-export default function ShapeElement({ id, style, content, isSelected }: ShapeElementProps) {
-  const { shape, color, size } = content
+export default function ShapeElement({
+  id,
+  style,
+  content,
+  isSelected,
+}: ShapeElementProps) {
+  const { shape, color, size } = content;
 
   switch (shape) {
     case "square":
@@ -29,7 +34,7 @@ export default function ShapeElement({ id, style, content, isSelected }: ShapeEl
             boxSizing: "border-box",
           }}
         />
-      )
+      );
     case "circle":
       return (
         <div
@@ -43,7 +48,7 @@ export default function ShapeElement({ id, style, content, isSelected }: ShapeEl
             boxSizing: "border-box",
           }}
         />
-      )
+      );
     case "triangle":
       return (
         <div
@@ -58,7 +63,7 @@ export default function ShapeElement({ id, style, content, isSelected }: ShapeEl
             boxSizing: "border-box",
           }}
         />
-      )
+      );
     case "diamond":
       return (
         <div
@@ -72,8 +77,8 @@ export default function ShapeElement({ id, style, content, isSelected }: ShapeEl
             boxSizing: "border-box",
           }}
         />
-      )
+      );
     default:
-      return null
+      return null;
   }
 }
