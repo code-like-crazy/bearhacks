@@ -6,7 +6,7 @@ export const registerSchema = z
       .string()
       .trim()
       .min(1, "Name is required")
-      .max(100, "Name is too long"),
+      .max(100, "Name must be less than 100 characters"),
     email: z
       .string()
       .email("Please enter a valid email address")
@@ -17,8 +17,8 @@ export const registerSchema = z
       .min(8, "Password must be at least 8 characters")
       .max(100, "Password must be less than 100 characters")
       .regex(
-        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/,
-        "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character",
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]+$/,
+        "Password must contain at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%*?&)",
       ),
     confirmPassword: z.string(),
   })
@@ -28,11 +28,12 @@ export const registerSchema = z
   });
 
 export const signInSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-  password: z
+  email: z
     .string()
-    .min(8, "Password must be at least 8 characters")
-    .max(100, "Password must be less than 100 characters"),
+    .email("Please enter a valid email address")
+    .trim()
+    .toLowerCase(),
+  password: z.string().min(1, "Password is required"),
 });
 
 export type RegisterRequest = z.infer<typeof registerSchema>;

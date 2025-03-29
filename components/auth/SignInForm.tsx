@@ -1,10 +1,14 @@
 "use client";
 
+import { useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { signIn } from "next-auth/react";
 import { useForm } from "react-hook-form";
+import { toast } from "sonner";
 import { z } from "zod";
 
-import { signInSchema } from "@/lib/validations/auth"; // Assuming validation schema exists
+import { signInSchema } from "@/lib/validations/auth";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -14,11 +18,14 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { Input } from "@/components/ui/input"; // Assuming Input component exists
+import { Input } from "@/components/ui/input";
 
 type SignInFormValues = z.infer<typeof signInSchema>;
 
 const SignInForm = () => {
+  const [isPending, startTransition] = useTransition();
+  const router = useRouter();
+
   const form = useForm<SignInFormValues>({
     resolver: zodResolver(signInSchema),
     defaultValues: {
@@ -28,8 +35,27 @@ const SignInForm = () => {
   });
 
   function onSubmit(values: SignInFormValues) {
-    // TODO: Implement sign-in logic
-    console.log(values);
+    startTransition(async () => {
+      try {
+        const response = await signIn("credentials", {
+          email: values.email,
+          password: values.password,
+          redirect: false,
+        });
+
+        if (response?.error) {
+          toast.error("Invalid email or password");
+          return;
+        }
+
+        toast.success("Signed in successfully!");
+        router.refresh();
+        router.push("/dashboard");
+      } catch (error) {
+        toast.error("Something went wrong. Please try again.");
+        console.error("Error in sign-in form: ", error);
+      }
+    });
   }
 
   return (
@@ -40,13 +66,14 @@ const SignInForm = () => {
           name="email"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-gray-700">Email</FormLabel>{" "}
-              {/* Changed text color */}
+              <FormLabel>Email</FormLabel>
               <FormControl>
                 <Input
                   placeholder="you@example.com"
+                  type="email"
                   {...field}
-                  className="focus:ring-primary border-gray-400 text-gray-900 placeholder:text-gray-400"
+                  disabled={isPending}
+                  className="focus:ring-primary border-gray-400 bg-white text-gray-900 placeholder:text-gray-400"
                 />
               </FormControl>
               <FormMessage />
@@ -58,14 +85,14 @@ const SignInForm = () => {
           name="password"
           render={({ field }) => (
             <FormItem>
-              <FormLabel className="text-gray-700">Password</FormLabel>{" "}
-              {/* Changed text color */}
+              <FormLabel>Password</FormLabel>
               <FormControl>
                 <Input
                   type="password"
                   placeholder="••••••••"
                   {...field}
-                  className="focus:ring-primary border-gray-400 text-gray-900 placeholder:text-gray-400"
+                  disabled={isPending}
+                  className="focus:ring-primary border-gray-400 bg-white text-gray-900 placeholder:text-gray-400"
                 />
               </FormControl>
               <FormMessage />
@@ -75,8 +102,9 @@ const SignInForm = () => {
         <Button
           type="submit"
           className="bg-primary hover:bg-primary/90 text-primary-foreground w-full"
+          disabled={isPending}
         >
-          Sign In
+          {isPending ? "Signing In..." : "Sign In"}
         </Button>
       </form>
     </Form>

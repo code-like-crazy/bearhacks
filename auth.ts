@@ -1,3 +1,4 @@
+import { cache } from "react";
 import bcrypt from "bcryptjs";
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
@@ -47,4 +48,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
     }),
   ],
+});
+
+export const getCurrentUser = cache(async () => {
+  const session = await auth();
+  if (!session?.user) {
+    return null;
+  }
+  return session.user;
 });

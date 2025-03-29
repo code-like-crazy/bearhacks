@@ -5,6 +5,8 @@ export const usersTable = sqliteTable("users", {
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
   hashedPassword: text("hashed_password").notNull(),
+  createdAt: integer("createdAt"),
+  updatedAt: integer("updatedAt"),
 });
 
 export type InsertUser = typeof usersTable.$inferInsert;

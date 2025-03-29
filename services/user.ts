@@ -1,6 +1,7 @@
 "server only";
 
 import { and, eq } from "drizzle-orm";
+import { nanoid } from "nanoid";
 
 import { db } from "@/lib/db";
 import { usersTable } from "@/lib/db/schema";
@@ -51,6 +52,25 @@ export const getUserByEmailAndPassword = async (
       "Error fetching user in getUserByEmailAndPassword function: ",
       error,
     );
+    return null;
+  }
+};
+
+export const createUser = async (
+  email: string,
+  password: string,
+  name: string,
+) => {
+  try {
+    await db.insert(usersTable).values({
+      id: nanoid(),
+      email,
+      name,
+      hashedPassword: password,
+      createdAt: Date.now(),
+    });
+  } catch (error) {
+    console.error("Error creating user in createUser function: ", error);
     return null;
   }
 };
