@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getCurrentUser } from "@/auth";
 
 import SignOutButton from "@/components/auth/SignOutButton";
+import ShareBoardModal from "@/components/modals/ShareBoardModal";
 
 const Home = async () => {
   const user = await getCurrentUser();
@@ -22,6 +23,17 @@ const Home = async () => {
           <Link href="/sign-in">Sign In</Link>
         </div>
       )}
+      <ShareBoardModal
+        board={{
+          createdAt: 1690873200000,
+          id: "1234567890",
+          imageUrl: "/avatars/bee.jpg",
+          inviteCode: "123456",
+          name: "Bebiboard",
+          lockedAt: 0,
+          creatorId: "1234567890",
+        }}
+      />
     </main>
   );
 };
