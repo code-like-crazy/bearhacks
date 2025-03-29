@@ -4,6 +4,7 @@ import { useState, useTransition } from "react";
 import Image from "next/image";
 import { createBoard } from "@/services/actions/boards/create-board";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { motion } from "motion/react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -42,6 +43,11 @@ const avatarImages = [
 ];
 
 type CreateBoardFormValues = z.infer<typeof createBoardSchema>;
+
+const formItemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: { opacity: 1, y: 0 },
+};
 
 const CreateBoardModal = () => {
   const [isPending, startTransition] = useTransition();
@@ -86,99 +92,153 @@ const CreateBoardModal = () => {
         <Button>Create Board</Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-xl">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-bold">
-            Create a New Board
-          </DialogTitle>
-        </DialogHeader>
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-lg">Board Name</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      placeholder="My Amazing Board"
-                      className="h-12"
-                      disabled={isPending}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="selectedImage"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-lg">Select Board Image</FormLabel>
-                  <div className="grid max-h-[300px] grid-cols-3 gap-4 overflow-y-auto rounded-lg border p-2 sm:grid-cols-4">
-                    {avatarImages.map((image) => (
-                      <div
-                        key={image}
-                        className={`relative aspect-square cursor-pointer overflow-hidden rounded-lg border-2 bg-black transition hover:opacity-75 ${
-                          field.value === `/avatars/${image}`
-                            ? "border-blue-500 ring-2 ring-blue-500"
-                            : "border-transparent"
-                        }`}
-                        onClick={() => field.onChange(`/avatars/${image}`)}
-                      >
-                        <Image
-                          src={`/avatars/${image}`}
-                          alt={image}
-                          fill
-                          className="object-cover select-none"
-                          sizes="128px"
-                        />
-                      </div>
-                    ))}
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="inviteCode"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-lg">
-                    Custom Invite Code (Optional)
-                  </FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      placeholder="e.g., FUNBOARD"
-                      className="h-12"
-                      disabled={isPending}
-                    />
-                  </FormControl>
-                  <p className="text-muted-foreground text-sm">
-                    Your invite code will be used to join the board. A random
-                    invite code will be generated if you leave it blank.
-                  </p>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <Button
-              type="submit"
-              size="lg"
-              className="w-full text-lg"
-              disabled={isPending}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          transition={{ duration: 0.2 }}
+        >
+          <DialogHeader>
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3 }}
             >
-              {isPending ? "Creating Board..." : "Create Board"}
-            </Button>
-          </form>
-        </Form>
+              <DialogTitle className="text-2xl font-bold">
+                Create a New Board
+              </DialogTitle>
+            </motion.div>
+          </DialogHeader>
+          <Form {...form}>
+            <motion.form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="space-y-8"
+              initial="hidden"
+              animate="visible"
+              variants={{
+                hidden: { opacity: 0 },
+                visible: {
+                  opacity: 1,
+                  transition: {
+                    staggerChildren: 0.1,
+                  },
+                },
+              }}
+            >
+              <motion.div variants={formItemVariants}>
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-lg">Board Name</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="My Amazing Board"
+                          className="h-12"
+                          disabled={isPending}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </motion.div>
+
+              <motion.div variants={formItemVariants}>
+                <FormField
+                  control={form.control}
+                  name="selectedImage"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-lg">
+                        Select Board Image
+                      </FormLabel>
+                      <div className="h-[300px] overflow-y-auto rounded-lg border p-4">
+                        <motion.div
+                          className="grid min-h-fit grid-cols-3 content-start gap-4 sm:grid-cols-4"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ duration: 0.2 }}
+                        >
+                          {avatarImages.map((image) => (
+                            <motion.div
+                              key={image}
+                              initial={{ opacity: 0, scale: 0.8 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ duration: 0.2 }}
+                              className={`relative row-span-1 aspect-square cursor-pointer overflow-hidden rounded-lg border-2 bg-black transition hover:opacity-75 ${
+                                field.value === `/avatars/${image}`
+                                  ? "border-blue-500 ring-2 ring-blue-500"
+                                  : "border-transparent"
+                              }`}
+                              onClick={() =>
+                                field.onChange(`/avatars/${image}`)
+                              }
+                            >
+                              <Image
+                                src={`/avatars/${image}`}
+                                alt={image}
+                                fill
+                                className="object-cover select-none"
+                                sizes="128px"
+                              />
+                            </motion.div>
+                          ))}
+                        </motion.div>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </motion.div>
+
+              <motion.div variants={formItemVariants}>
+                <FormField
+                  control={form.control}
+                  name="inviteCode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-lg">
+                        Custom Invite Code (Optional)
+                      </FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          placeholder="e.g., FUNBOARD"
+                          className="h-12"
+                          disabled={isPending}
+                        />
+                      </FormControl>
+                      <p className="text-muted-foreground text-sm">
+                        Your invite code will be used to join the board. A
+                        random invite code will be generated if you leave it
+                        blank.
+                      </p>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </motion.div>
+
+              <motion.div
+                variants={formItemVariants}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                <Button
+                  type="submit"
+                  size="lg"
+                  className="w-full text-lg"
+                  disabled={isPending}
+                >
+                  {isPending ? "Creating Board..." : "Create Board"}
+                </Button>
+              </motion.div>
+            </motion.form>
+          </Form>
+        </motion.div>
       </DialogContent>
     </Dialog>
   );
