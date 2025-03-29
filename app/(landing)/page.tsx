@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getCurrentUser } from "@/auth";
 
 import SignOutButton from "@/components/auth/SignOutButton";
+import CreateBoardModal from "@/components/modals/CreateBoardModal";
 import ShareBoardModal from "@/components/modals/ShareBoardModal";
 
 const Home = async () => {
@@ -34,6 +35,7 @@ const Home = async () => {
           creatorId: "1234567890",
         }}
       />
+      <CreateBoardModal />
     </main>
   );
 };

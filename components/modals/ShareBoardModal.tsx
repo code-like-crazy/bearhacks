@@ -28,8 +28,10 @@ const ShareBoardModal = ({ board }: Props) => {
   // Track which button was recently clicked
   const [recentCopy, setRecentCopy] = useState<"link" | "code" | null>(null);
 
-  // The join URL for the board
-  const joinUrl = `${window.location.origin}/board/join/${board.id}`;
+  const joinUrl =
+    process.env.NODE_ENV === "development"
+      ? `http://localhost:3000/board/join/${board.id}`
+      : `TODO/board/join/${board.id}`;
 
   const playClickSound = () => {
     const audioContext = new window.AudioContext();
