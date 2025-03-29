@@ -1,12 +1,10 @@
-import Whiteboard from "@/components/ui/whiteboard";
+import Whiteboard from "@/components/whiteboard"
 
-const BoardPage = () => {
+export default function Home() {
   return (
-    <div>
-      <h1 style={{ textAlign: 'center' }}>Interactive Whiteboard</h1>
+    <div className="flex h-screen flex-col">
       <Whiteboard />
     </div>
-  );
-};
+  )
+}
 
-export default BoardPage;
