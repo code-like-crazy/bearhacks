@@ -94,7 +94,7 @@ const CreateBoardModal = ({ children }: CreateBoardModalProps) => {
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         {children || (
-          <Button size="lg" className="font-semibold">
+          <Button size="lg" className="font-semibold" variant="secondary">
             Create Board
           </Button>
         )}

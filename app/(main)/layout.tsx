@@ -12,7 +12,7 @@ const MainLayout = (props: Props) => {
       <Navbar />
 
       {/* main content */}
-      <main className="flex h-full min-h-svh flex-1 lg:ml-80">
+      <main className="flex h-full min-h-svh flex-1 lg:ml-72">
         {props.children}
       </main>
     </div>
