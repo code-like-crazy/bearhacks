@@ -6,13 +6,19 @@ import SignUpForm from "@/components/auth/SignUpForm";
 const SignUpPage = () => {
   return (
     <AuthCard>
-      <div className="mb-6 space-y-2 text-center">
-        <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
-          Start Your Journey Here
+      <div className="mb-6 space-y-3 text-center">
+        {" "}
+        {/* Increased space */}
+        {/* TODO: Consider adding an icon here */}
+        <h1 className="text-3xl font-bold tracking-tight text-gray-900">
+          {" "}
+          {/* Bolder, larger */}
+          Join the Adventure!
         </h1>
-        <p className="text-sm text-gray-600">
-          Create your AppName account and begin crafting dream trips with
-          friends.
+        <p className="text-md text-gray-700">
+          {" "}
+          {/* Slightly larger, darker gray */}
+          Create an account to start collaborating on trips.
         </p>
       </div>
       <SignUpForm />

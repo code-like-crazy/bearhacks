@@ -7,11 +7,12 @@ const SignInPage = () => {
   return (
     <AuthCard>
       <div className="mb-6 space-y-2 text-center">
-        <h1 className="text-2xl font-semibold tracking-tight text-gray-900">
-          Ready for Your Next Trip?
+        {/* TODO: Consider adding an icon here */}
+        <h1 className="text-2xl font-bold tracking-tight text-gray-900 md:text-3xl">
+          Welcome Back!
         </h1>
-        <p className="text-sm text-gray-600">
-          Sign in to access your collaborative travel boards and AI insights.
+        <p className="text-gray-700 max-md:text-sm">
+          Sign in to plan your next adventure.
         </p>
       </div>
       <SignInForm />
