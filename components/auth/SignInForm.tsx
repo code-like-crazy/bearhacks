@@ -2,8 +2,8 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { signIn } from "@/services/actions/auth/sign-in";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { signIn } from "next-auth/react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -36,24 +36,18 @@ const SignInForm = () => {
 
   function onSubmit(values: SignInFormValues) {
     startTransition(async () => {
-      try {
-        const response = await signIn("credentials", {
-          email: values.email,
-          password: values.password,
-          redirect: false,
-        });
+      const response = await signIn(values);
 
-        if (response?.error) {
-          toast.error("Invalid email or password");
-          return;
-        }
+      if (response?.error) {
+        toast.error(response.error);
+        return;
+      }
 
-        toast.success("Signed in successfully!");
-        router.refresh();
-        router.push("/");
-      } catch (error) {
-        toast.error("Something went wrong. Please try again.");
-        console.error("Error in sign-in form: ", error);
+      toast.success("Signed in successfully!");
+      router.refresh();
+
+      if (response.redirectTo) {
+        router.push(response.redirectTo);
       }
     });
   }

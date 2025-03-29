@@ -1,7 +1,7 @@
 "server only";
 
 import { getCurrentUser } from "@/auth";
-import { eq } from "drizzle-orm";
+import { eq, or } from "drizzle-orm";
 
 import { db } from "@/lib/db";
 import { boardMembers, boards } from "@/lib/db/schema";
@@ -15,11 +15,15 @@ export const getAllUserBoards = async () => {
     }
 
     const userBoards = await db
-      .select()
+      .selectDistinct()
       .from(boards)
-      .where(eq(boards.creatorId, user.id));
+      .leftJoin(boardMembers, eq(boards.id, boardMembers.boardId))
+      .where(
+        or(eq(boards.creatorId, user.id), eq(boardMembers.userId, user.id)),
+      );
 
-    return userBoards;
+    // Map to return just the board data
+    return userBoards.map(({ boards }) => boards);
   } catch (error) {
     console.error(
       "Error fetching user boards in getAllUserBoards function: ",
