@@ -19,7 +19,7 @@ export const signIn = async (values: SignInRequest) => {
     if (!userBoards?.length) {
       return {
         success: true,
-        redirectTo: "/boards",
+        redirectTo: "/home",
       };
     }
 
