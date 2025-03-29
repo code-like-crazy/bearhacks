@@ -50,7 +50,7 @@ const SignInForm = () => {
 
         toast.success("Signed in successfully!");
         router.refresh();
-        router.push("/dashboard");
+        router.push("/");
       } catch (error) {
         toast.error("Something went wrong. Please try again.");
         console.error("Error in sign-in form: ", error);

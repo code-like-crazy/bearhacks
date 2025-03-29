@@ -1,5 +1,8 @@
 import Image from "next/image";
+import Link from "next/link";
 import { getCurrentUser } from "@/auth";
+
+import SignOutButton from "@/components/auth/SignOutButton";
 
 const Home = async () => {
   const user = await getCurrentUser();
@@ -7,12 +10,18 @@ const Home = async () => {
   return (
     <main>
       Landing Page
-      <Image
-        width={400}
-        height={400}
-        src={user?.imageUrl ?? "/avatar.png"}
-        alt="Avatar"
-      />
+      {user ? (
+        <div>
+          <p>Welcome, {user.name}</p>
+          <Image width={400} height={400} src={user.imageUrl} alt="Avatar" />
+          <SignOutButton />
+        </div>
+      ) : (
+        <div>
+          <p>You're not logged in</p>
+          <Link href="/sign-in">Sign In</Link>
+        </div>
+      )}
     </main>
   );
 };

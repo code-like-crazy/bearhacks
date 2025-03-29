@@ -144,11 +144,11 @@ const SignUpForm = () => {
                   className="focus:ring-primary border-gray-400 bg-white text-gray-900 placeholder:text-gray-400"
                 />
               </FormControl>
-              <FormDescription className="text-xs text-gray-500">
+              {/* <FormDescription className="text-xs text-gray-500">
                 Password must be at least 8 characters and contain: uppercase
                 letter, lowercase letter, number, and special character
                 (@$!%*?&)
-              </FormDescription>
+              </FormDescription> */}
               <FormMessage className="text-red-500" />
             </FormItem>
           )}
