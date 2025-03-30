@@ -52,7 +52,7 @@ export function AIChat({ geminiResponse }: AIChatProps) {
   };
 
   return (
-    <div className="flex h-[calc(100vh-10rem)] flex-col">
+    <div className="mt-8 flex h-[calc(100vh-14rem)] flex-col">
       <div className="flex-1 overflow-auto p-3">
         {messages.length === 0 ? (
           <div className="flex h-full items-center justify-center p-4 text-center">

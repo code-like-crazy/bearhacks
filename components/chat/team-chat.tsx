@@ -63,7 +63,7 @@ export function TeamChat() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-14rem)] flex-col">
+    <div className="mt-8 flex h-[calc(100vh-14rem)] flex-col">
       <div className="flex-1 overflow-auto px-4">
         {!chatMessages || chatMessages.length === 0 ? (
           <motion.div
