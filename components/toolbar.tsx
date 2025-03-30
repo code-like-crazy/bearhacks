@@ -139,22 +139,236 @@ export default function ToolBar({
 
   return (
     <TooltipProvider>
-      <motion.div
-        initial={{ y: -50, opacity: 0, scale: 0.8 }}
-        animate={{ y: 0, opacity: 1, scale: 1 }}
-        transition={{
-          type: "spring",
-          stiffness: 200,
-          damping: 20,
-          mass: 1,
-        }}
-        className="mx-auto flex max-w-3xl -translate-x-36 items-center gap-4 rounded-full border p-2 shadow-sm"
-      >
-        {tools.map((tool, index) => (
-          <Tooltip key={tool.id}>
-            <Popover>
-              <PopoverTrigger asChild>
-                <TooltipTrigger asChild>
+      <div className="fixed inset-x-0 bottom-0 pb-4">
+        <motion.div
+          initial={{ y: -50, opacity: 0, scale: 0.8 }}
+          animate={{ y: 0, opacity: 1, scale: 1 }}
+          transition={{
+            type: "spring",
+            stiffness: 200,
+            damping: 20,
+            mass: 1,
+          }}
+          className="mx-auto flex w-fit max-w-3xl items-center gap-4 rounded-full border border-black/10 bg-white px-2 pt-2 shadow-md"
+        >
+          {tools.map((tool, index) => (
+            <Tooltip key={tool.id}>
+              <TooltipTrigger asChild>
+                {tool.shapeOptions ||
+                tool.stampOptions ||
+                tool.id === "color" ? (
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <motion.div
+                        initial={{ scale: 0, rotate: -180 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        transition={{
+                          type: "spring",
+                          stiffness: 260,
+                          damping: 20,
+                          delay: index * 0.05,
+                        }}
+                      >
+                        <motion.div
+                          whileHover={{
+                            scale: 1.1,
+                            rotate: 5,
+                            transition: {
+                              type: "spring",
+                              stiffness: 400,
+                              damping: 10,
+                            },
+                          }}
+                          whileTap={{
+                            scale: 0.9,
+                            rotate: -5,
+                          }}
+                          animate={{
+                            backgroundColor:
+                              activeTool === (tool.id as ToolType)
+                                ? "var(--background-selected)"
+                                : "transparent",
+                            y: activeTool === (tool.id as ToolType) ? -4 : 0,
+                          }}
+                          transition={{
+                            type: "spring",
+                            stiffness: 300,
+                            damping: 20,
+                          }}
+                        >
+                          <Button
+                            size="icon"
+                            variant={
+                              activeTool === (tool.id as ToolType)
+                                ? "default"
+                                : "ghost"
+                            }
+                            className="relative size-12 rounded-full"
+                            onClick={() => onToolChange(tool.id as ToolType)}
+                          >
+                            <motion.div
+                              initial={false}
+                              animate={{
+                                rotate:
+                                  activeTool === (tool.id as ToolType)
+                                    ? 360
+                                    : 0,
+                                scale:
+                                  activeTool === (tool.id as ToolType)
+                                    ? 1.2
+                                    : 1,
+                              }}
+                              transition={{
+                                type: "spring",
+                                stiffness: 300,
+                                damping: 20,
+                              }}
+                            >
+                              {tool.icon}
+                            </motion.div>
+                          </Button>
+                        </motion.div>
+                      </motion.div>
+                    </PopoverTrigger>
+                    {tool.shapeOptions && (
+                      <PopoverContent
+                        className="w-auto p-2"
+                        align="center"
+                        asChild
+                      >
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.6, y: 20 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          transition={{
+                            type: "spring",
+                            stiffness: 300,
+                            damping: 20,
+                          }}
+                        >
+                          <div className="grid grid-cols-2 gap-2">
+                            {tool.shapeOptions.map((shape, i) => (
+                              <motion.div
+                                key={shape.id}
+                                initial={{ opacity: 0, scale: 0 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{
+                                  type: "spring",
+                                  stiffness: 300,
+                                  damping: 20,
+                                  delay: i * 0.1,
+                                }}
+                              >
+                                <motion.div
+                                  whileHover={{
+                                    scale: 1.2,
+                                    rotate: 10,
+                                    transition: {
+                                      type: "spring",
+                                      stiffness: 400,
+                                      damping: 10,
+                                    },
+                                  }}
+                                  whileTap={{ scale: 0.8 }}
+                                >
+                                  <Button
+                                    size="icon"
+                                    className="size-8"
+                                    onClick={() =>
+                                      onToolChange(shape.id as ToolType)
+                                    }
+                                  >
+                                    {shape.icon}
+                                  </Button>
+                                </motion.div>
+                              </motion.div>
+                            ))}
+                          </div>
+                        </motion.div>
+                      </PopoverContent>
+                    )}
+                    {tool.stampOptions && (
+                      <PopoverContent
+                        className="w-auto p-2"
+                        align="center"
+                        asChild
+                      >
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.6, y: 20 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          transition={{
+                            type: "spring",
+                            stiffness: 300,
+                            damping: 20,
+                          }}
+                        >
+                          <div className="grid grid-cols-5 gap-2">
+                            {tool.stampOptions.map((stamp, i) => (
+                              <motion.div
+                                key={stamp.id}
+                                initial={{ opacity: 0, scale: 0 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{
+                                  type: "spring",
+                                  stiffness: 300,
+                                  damping: 20,
+                                  delay: i * 0.05,
+                                }}
+                              >
+                                <motion.div
+                                  whileHover={{
+                                    scale: 1.3,
+                                    transition: {
+                                      type: "spring",
+                                      stiffness: 400,
+                                      damping: 10,
+                                    },
+                                  }}
+                                  whileTap={{ scale: 0.8 }}
+                                >
+                                  <Button
+                                    size="icon"
+                                    className="size-8 text-lg"
+                                    onClick={() => {
+                                      localStorage.setItem(
+                                        "selectedEmoji",
+                                        stamp.emoji,
+                                      );
+                                      onToolChange("stamp");
+                                    }}
+                                  >
+                                    {stamp.emoji}
+                                  </Button>
+                                </motion.div>
+                              </motion.div>
+                            ))}
+                          </div>
+                        </motion.div>
+                      </PopoverContent>
+                    )}
+                    {tool.id === "color" && (
+                      <PopoverContent
+                        className="w-auto p-2"
+                        align="center"
+                        asChild
+                      >
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.6, y: 20 }}
+                          animate={{ opacity: 1, scale: 1, y: 0 }}
+                          transition={{
+                            type: "spring",
+                            stiffness: 300,
+                            damping: 20,
+                          }}
+                        >
+                          <ColorPicker
+                            color={currentColor}
+                            onChange={onColorChange}
+                          />
+                        </motion.div>
+                      </PopoverContent>
+                    )}
+                  </Popover>
+                ) : (
                   <motion.div
                     initial={{ scale: 0, rotate: -180 }}
                     animate={{ scale: 1, rotate: 0 }}
@@ -221,146 +435,25 @@ export default function ToolBar({
                       </Button>
                     </motion.div>
                   </motion.div>
-                </TooltipTrigger>
-              </PopoverTrigger>
-              {tool.shapeOptions ? (
-                <PopoverContent className="w-auto p-2" align="center" asChild>
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.6, y: 20 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    transition={{
-                      type: "spring",
-                      stiffness: 300,
-                      damping: 20,
-                    }}
-                  >
-                    <div className="grid grid-cols-2 gap-2">
-                      {tool.shapeOptions.map((shape, i) => (
-                        <motion.div
-                          key={shape.id}
-                          initial={{ opacity: 0, scale: 0 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{
-                            type: "spring",
-                            stiffness: 300,
-                            damping: 20,
-                            delay: i * 0.1,
-                          }}
-                        >
-                          <motion.div
-                            whileHover={{
-                              scale: 1.2,
-                              rotate: 10,
-                              transition: {
-                                type: "spring",
-                                stiffness: 400,
-                                damping: 10,
-                              },
-                            }}
-                            whileTap={{ scale: 0.8 }}
-                          >
-                            <Button
-                              size="icon"
-                              className="size-8"
-                              onClick={() => onToolChange(shape.id as ToolType)}
-                            >
-                              {shape.icon}
-                            </Button>
-                          </motion.div>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </motion.div>
-                </PopoverContent>
-              ) : tool.stampOptions ? (
-                <PopoverContent className="w-auto p-2" align="center" asChild>
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.6, y: 20 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    transition={{
-                      type: "spring",
-                      stiffness: 300,
-                      damping: 20,
-                    }}
-                  >
-                    <div className="grid grid-cols-5 gap-2">
-                      {tool.stampOptions.map((stamp, i) => (
-                        <motion.div
-                          key={stamp.id}
-                          initial={{ opacity: 0, scale: 0 }}
-                          animate={{ opacity: 1, scale: 1 }}
-                          transition={{
-                            type: "spring",
-                            stiffness: 300,
-                            damping: 20,
-                            delay: i * 0.05,
-                          }}
-                        >
-                          <motion.div
-                            whileHover={{
-                              scale: 1.3,
-                              transition: {
-                                type: "spring",
-                                stiffness: 400,
-                                damping: 10,
-                              },
-                            }}
-                            whileTap={{ scale: 0.8 }}
-                          >
-                            <Button
-                              size="icon"
-                              className="size-8 text-lg"
-                              onClick={() => {
-                                localStorage.setItem(
-                                  "selectedEmoji",
-                                  stamp.emoji,
-                                );
-                                onToolChange("stamp");
-                              }}
-                            >
-                              {stamp.emoji}
-                            </Button>
-                          </motion.div>
-                        </motion.div>
-                      ))}
-                    </div>
-                  </motion.div>
-                </PopoverContent>
-              ) : tool.id === "color" ? (
-                <PopoverContent className="w-auto p-2" align="center" asChild>
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.6, y: 20 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    transition={{
-                      type: "spring",
-                      stiffness: 300,
-                      damping: 20,
-                    }}
-                  >
-                    <ColorPicker
-                      color={currentColor}
-                      onChange={onColorChange}
-                    />
-                  </motion.div>
-                </PopoverContent>
-              ) : null}
-            </Popover>
-            <TooltipContent asChild>
-              <motion.div
-                initial={{ opacity: 0, y: 10, scale: 0.8 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{
-                  type: "spring",
-                  stiffness: 300,
-                  damping: 20,
-                }}
-              >
-                <p>{tool.label}</p>
-              </motion.div>
-            </TooltipContent>
-          </Tooltip>
-        ))}
-      </motion.div>
+                )}
+              </TooltipTrigger>
+              <TooltipContent asChild>
+                <motion.div
+                  initial={{ opacity: 0, y: 10, scale: 0.8 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 300,
+                    damping: 20,
+                  }}
+                >
+                  <p>{tool.label}</p>
+                </motion.div>
+              </TooltipContent>
+            </Tooltip>
+          ))}
+        </motion.div>
+      </div>
     </TooltipProvider>
   );
 }
