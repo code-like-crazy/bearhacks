@@ -63,7 +63,7 @@ export default function LiveCanvas({
     // Get the parent container dimensions
     const parentWidth =
       canvasRef.current.parentElement?.clientWidth || window.innerWidth - 300;
-    const parentHeight = window.innerHeight - 161; // Adjust for header and toolbar
+    const parentHeight = window.innerHeight - 164; // Adjust for header and toolbar
 
     const c = new fabric.Canvas("canvas", {
       height: parentHeight,

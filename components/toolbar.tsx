@@ -1,15 +1,12 @@
 "use client";
 
+import Image from "next/image";
 import {
-  Camera,
   Circle,
-  Eraser,
   Hand,
   MousePointer,
-  Pencil,
   Square,
   Stamp,
-  StickyNote,
   Text,
   Triangle,
 } from "lucide-react";
@@ -56,17 +53,33 @@ export default function ToolBar({
     },
     {
       id: "sticky",
-      icon: <StickyNote className="size-6" />,
+      icon: (
+        <Image
+          src="/tools/sticky note.svg"
+          alt="Sticky Note"
+          width={40}
+          height={40}
+        />
+      ),
       label: "Sticky Note",
     },
     {
       id: "image",
-      icon: <Camera className="size-6" />,
+      icon: (
+        <Image
+          src="/tools/Polaroid.svg"
+          alt="Upload Image"
+          width={40}
+          height={40}
+        />
+      ),
       label: "Upload Image",
     },
     {
       id: "pencil",
-      icon: <Pencil className="size-6" />,
+      icon: (
+        <Image src="/tools/pencil.svg" alt="Pencil" width={32} height={32} />
+      ),
       label: "Draw",
     },
     {
@@ -76,7 +89,9 @@ export default function ToolBar({
     },
     {
       id: "eraser",
-      icon: <Eraser className="size-6" />,
+      icon: (
+        <Image src="/tools/Eraser.svg" alt="Eraser" width={32} height={32} />
+      ),
       label: "Erase",
     },
     {
@@ -132,7 +147,7 @@ export default function ToolBar({
   return (
     <TooltipProvider>
       <div className="flex justify-center border-t p-4">
-        <div className="mr-72 flex items-center gap-2 rounded-full border p-2 shadow-sm">
+        <div className="mr-72 flex items-center gap-4 rounded-full border p-2 shadow-sm">
           {tools.map((tool) => (
             <Tooltip key={tool.id}>
               <Popover>
