@@ -48,46 +48,46 @@ export default function ToolBar({
   const tools = [
     {
       id: "select",
-      icon: <MousePointer className="h-6 w-6" />,
+      icon: <MousePointer className="size-6" />,
       label: "Select",
     },
     {
       id: "grab",
-      icon: <Hand className="h-6 w-6" />,
+      icon: <Hand className="size-6" />,
       label: "Move Canvas",
     },
     {
       id: "sticky",
-      icon: <StickyNote className="h-6 w-6" />,
+      icon: <StickyNote className="size-6" />,
       label: "Sticky Note",
     },
     {
       id: "image",
-      icon: <Camera className="h-6 w-6" />,
+      icon: <Camera className="size-6" />,
       label: "Upload Image",
     },
     {
       id: "pencil",
-      icon: <Pencil className="h-6 w-6" />,
+      icon: <Pencil className="size-6" />,
       label: "Draw",
     },
     {
       id: "text",
-      icon: <Text className="h-6 w-6" />,
+      icon: <Text className="size-6" />,
       label: "Add Text",
     },
     {
       id: "eraser",
-      icon: <Eraser className="h-6 w-6" />,
+      icon: <Eraser className="size-6" />,
       label: "Erase",
     },
     {
       id: "stamp",
-      icon: <Stamp className="h-6 w-6" />,
+      icon: <Stamp className="size-6" />,
       label: "Stamps",
       stampOptions: [
         { id: "👍", emoji: "👍" },
-        { id: "👎", emoji: "👎" },
+        { id: "👎", emoji: "A" },
         { id: "❤️", emoji: "❤️" },
         { id: "🔥", emoji: "🔥" },
         { id: "⭐", emoji: "⭐" },
@@ -105,16 +105,16 @@ export default function ToolBar({
           xmlns="http://www.w3.org/2000/svg"
           viewBox="0 0 24 24"
           fill="currentColor"
-          className="h-6 w-6"
+          className="size-6"
         >
           <path d="M2 4.75C2 3.78424 2.78424 3 3.75 3H20.25C21.2158 3 22 3.78424 22 4.75V19.25C22 20.2158 21.2158 21 20.25 21H3.75C2.78424 21 2 20.2158 2 19.25V4.75ZM4.5 5.5V18.5H19.5V5.5H4.5ZM6 7H9V11H6V7ZM10.5 7H13.5V11H10.5V7ZM15 7H18V11H15V7ZM6 13H9V17H6V13ZM10.5 13H13.5V17H10.5V13ZM15 13H18V17H15V13Z" />
         </svg>
       ),
       label: "Shapes",
       shapeOptions: [
-        { id: "rectangle", icon: <Square className="h-5 w-5" /> },
-        { id: "circle", icon: <Circle className="h-5 w-5" /> },
-        { id: "triangle", icon: <Triangle className="h-5 w-5" /> },
+        { id: "rectangle", icon: <Square className="size-5" /> },
+        { id: "circle", icon: <Circle className="size-5" /> },
+        { id: "triangle", icon: <Triangle className="size-5" /> },
       ],
     },
     {
@@ -122,7 +122,7 @@ export default function ToolBar({
       icon: (
         <div className="flex items-center justify-center">
           <div
-            className="h-6 w-6 rounded-full border border-white shadow-sm"
+            className="size-6 rounded-full border border-white shadow-sm"
             style={{ backgroundColor: currentColor }}
           />
         </div>

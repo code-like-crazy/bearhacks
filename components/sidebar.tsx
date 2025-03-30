@@ -58,7 +58,7 @@ export default function Sidebar() {
                 <div
                   className={`h-5 w-1 rounded-full ${board.active ? "bg-primary" : "bg-transparent"}`}
                 />
-                <Avatar className="h-6 w-6">
+                <Avatar className="size-6">
                   <AvatarImage src={board.user.image} alt={board.user.name} />
                   <AvatarFallback>{board.user.name[0]}</AvatarFallback>
                 </Avatar>

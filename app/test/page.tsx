@@ -557,7 +557,7 @@ const TestPage = () => {
           {colors.map((color) => (
             <div
               key={color}
-              className="h-6 w-6 cursor-pointer rounded-full border"
+              className="size-6 cursor-pointer rounded-full border"
               style={{ backgroundColor: color }}
               onClick={() => {
                 setCurrentColor(color);
