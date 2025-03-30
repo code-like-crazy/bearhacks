@@ -33,11 +33,16 @@ function WhiteboardContent() {
 
   // Update cursor based on active tool
   useEffect(() => {
-    const cursor = isDragging
-      ? "grabbing"
-      : activeTool === "select"
-        ? "grab"
-        : "default";
+    let cursor = "default";
+
+    if (isDragging) {
+      cursor = "grabbing";
+    } else if (activeTool === "select") {
+      cursor = "default";
+    } else if (activeTool === "grab") {
+      cursor = "grab";
+    }
+
     document.body.style.cursor = cursor;
 
     return () => {
@@ -46,6 +51,11 @@ function WhiteboardContent() {
   }, [isDragging, activeTool]);
 
   const handleToolChange = (tool: ToolType) => {
+    // If shapes is selected, default to rectangle
+    if (tool === "shapes") {
+      setActiveTool("rectangle");
+      return;
+    }
     setActiveTool(tool);
   };
 

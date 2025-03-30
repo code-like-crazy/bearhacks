@@ -1,13 +1,13 @@
 export type ToolType =
   | "select"
   | "sticky"
-  | "camera"
   | "pencil"
   | "text"
   | "eraser"
   | "stamp"
-  | "shape"
+  | "shapes"
   | "rectangle"
   | "circle"
   | "triangle"
-  | "image";
+  | "image"
+  | "grab";

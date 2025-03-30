@@ -73,13 +73,13 @@ export type ShapeType = "rectangle" | "circle" | "triangle";
 export type ToolType =
   | "select"
   | "sticky"
-  | "camera"
   | "pencil"
   | "text"
   | "eraser"
   | "stamp"
-  | "shape"
+  | "shapes"
   | "image"
+  | "grab"
   | ShapeType;
 
 // Props types

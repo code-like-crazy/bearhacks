@@ -6,6 +6,8 @@ import {
   Circle,
   Diamond,
   Eraser,
+  Hand,
+  MousePointer,
   Pencil,
   Square,
   Stamp,
@@ -45,13 +47,25 @@ export default function ToolBar({
 }: ToolBarProps) {
   const tools = [
     {
+      id: "select",
+      icon: <MousePointer className="h-6 w-6" />,
+      label: "Select",
+      showColorPicker: false,
+    },
+    {
+      id: "grab",
+      icon: <Hand className="h-6 w-6" />,
+      label: "Move Canvas",
+      showColorPicker: false,
+    },
+    {
       id: "sticky",
       icon: <StickyNote className="h-6 w-6" />,
       label: "Sticky Note",
       showColorPicker: true,
     },
     {
-      id: "camera",
+      id: "image",
       icon: <Camera className="h-6 w-6" />,
       label: "Upload Image",
       showColorPicker: false,
@@ -81,7 +95,7 @@ export default function ToolBar({
       showColorPicker: false,
     },
     {
-      id: "shape",
+      id: "shapes",
       icon: (
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -93,12 +107,11 @@ export default function ToolBar({
         </svg>
       ),
       label: "Shapes",
-      showColorPicker: false,
+      showColorPicker: true,
       shapeOptions: [
-        { id: "square", icon: <Square className="h-5 w-5" /> },
+        { id: "rectangle", icon: <Square className="h-5 w-5" /> },
         { id: "circle", icon: <Circle className="h-5 w-5" /> },
         { id: "triangle", icon: <Triangle className="h-5 w-5" /> },
-        { id: "diamond", icon: <Diamond className="h-5 w-5" /> },
       ],
     },
   ];
@@ -146,9 +159,7 @@ export default function ToolBar({
                           key={shape.id}
                           size="icon"
                           className="h-8 w-8"
-                          onClick={() =>
-                            onToolChange(`shape-${shape.id}` as ToolType)
-                          }
+                          onClick={() => onToolChange(shape.id as ToolType)}
                         >
                           {shape.icon}
                         </Button>

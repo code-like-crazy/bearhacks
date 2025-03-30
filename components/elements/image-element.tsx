@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
 
 import { Card } from "@/components/ui/card";
@@ -31,6 +31,24 @@ export default function ImageElement({
 }: ImageElementProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
+  const [imageSrc, setImageSrc] = useState<string>(
+    content.src || "/placeholder.svg",
+  );
+  const [imageError, setImageError] = useState(false);
+
+  // Handle image loading errors
+  useEffect(() => {
+    if (content.src) {
+      setImageSrc(content.src);
+      setImageError(false);
+    }
+  }, [content.src]);
+
+  const handleImageError = () => {
+    console.error("Failed to load image:", content.src);
+    setImageError(true);
+    setImageSrc("/placeholder.svg");
+  };
 
   const handleMouseDown = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -74,12 +92,19 @@ export default function ImageElement({
     >
       <div className="relative">
         <Image
-          src={content.src || "/placeholder.svg"}
-          alt={content.alt}
+          src={imageSrc}
+          alt={content.alt || "Image"}
           width={200}
           height={200}
           className="rounded-md"
+          onError={handleImageError}
+          unoptimized={imageSrc.startsWith("data:")} // Required for data URLs
         />
+        {imageError && (
+          <div className="absolute inset-0 flex items-center justify-center rounded-md bg-gray-100">
+            <span className="text-sm text-gray-500">Failed to load image</span>
+          </div>
+        )}
         {content.caption && (
           <div className="mt-1 text-center text-sm">{content.caption}</div>
         )}

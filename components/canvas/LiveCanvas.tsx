@@ -71,65 +71,12 @@ export default function LiveCanvas({
       backgroundColor: "#f3f4f6", // Light gray background
     });
 
-    // Create grid pattern for background
-    const gridSize = 25;
-    const gridColor = "rgba(200, 200, 200, 0.2)";
-
-    // Create grid as background image
-    const gridCanvas = document.createElement("canvas");
-    gridCanvas.width = gridSize;
-    gridCanvas.height = gridSize;
-
-    const gridCtx = gridCanvas.getContext("2d");
-    if (gridCtx) {
-      // Draw vertical line
-      gridCtx.beginPath();
-      gridCtx.moveTo(gridSize, 0);
-      gridCtx.lineTo(gridSize, gridSize);
-      gridCtx.strokeStyle = gridColor;
-      gridCtx.stroke();
-
-      // Draw horizontal line
-      gridCtx.beginPath();
-      gridCtx.moveTo(0, gridSize);
-      gridCtx.lineTo(gridSize, gridSize);
-      gridCtx.strokeStyle = gridColor;
-      gridCtx.stroke();
-    }
-
-    // Create pattern and set as background
-    const pattern = new fabric.Pattern({
-      source: gridCanvas,
-      repeat: "repeat",
-    });
-
-    // Add grid as a background image
-    // Create a background overlay with the grid pattern
-    const gridOverlay = new fabric.Rect({
-      width: parentWidth,
-      height: parentHeight,
-      left: 0,
-      top: 0,
-      fill: pattern,
-      selectable: false,
-      evented: false,
-      excludeFromExport: true,
-    });
-
-    // Add the grid overlay to the canvas
-    c.add(gridOverlay);
-
-    // Make sure the grid is at the back
-    // We'll use a type assertion since the TypeScript definitions might be incomplete
-    (gridOverlay as any).moveTo(0);
-    c.renderAll();
-
     // Settings for all canvas in the app
-    fabric.Object.prototype.transparentCorners = false;
-    fabric.Object.prototype.cornerColor = "#2BEBC8";
-    fabric.Object.prototype.cornerStyle = "rect";
-    fabric.Object.prototype.cornerStrokeColor = "#2BEBC8";
-    fabric.Object.prototype.cornerSize = 6;
+    fabric.FabricObject.prototype.transparentCorners = false;
+    fabric.FabricObject.prototype.cornerColor = "#2BEBC8";
+    fabric.FabricObject.prototype.cornerStyle = "circle";
+    fabric.FabricObject.prototype.cornerStrokeColor = "#2BEBC8";
+    fabric.FabricObject.prototype.cornerSize = 6;
 
     setCanvas(c);
 
@@ -565,7 +512,7 @@ export default function LiveCanvas({
         canvas.off("path:created", handlePathCreated);
       };
     } else if (activeTool === "select") {
-      // Enable object selection and canvas dragging
+      // Enable object selection but not canvas dragging
       canvas.isDrawingMode = false;
       canvas.selection = true;
       canvas.forEachObject((obj) => {
@@ -579,26 +526,30 @@ export default function LiveCanvas({
         }
       };
 
-      // Enable canvas dragging when select tool is active
+      canvas.on("object:modified", handleObjectModified);
+
+      return () => {
+        canvas.off("object:modified", handleObjectModified);
+      };
+    } else if (activeTool === "grab") {
+      // Enable canvas dragging but disable object selection
+      canvas.isDrawingMode = false;
+      canvas.selection = false;
+      canvas.forEachObject((obj) => {
+        obj.selectable = false;
+      });
+
+      // Enable canvas dragging
       let isDragging = false;
       let lastPosX = 0;
       let lastPosY = 0;
 
       const handleCanvasMouseDown = (opt: any) => {
         const evt = opt.e;
-        // Allow dragging by default with select tool
         isDragging = true;
         lastPosX = evt.clientX;
         lastPosY = evt.clientY;
-
-        // If we're clicking on an object, don't drag the canvas
-        if (canvas.getActiveObject() && opt.target) {
-          isDragging = false;
-        }
-
-        if (isDragging) {
-          canvas.selection = false;
-        }
+        canvas.selection = false;
       };
 
       const handleCanvasMouseMove = (opt: any) => {
@@ -623,20 +574,34 @@ export default function LiveCanvas({
 
       const handleCanvasMouseUp = () => {
         isDragging = false;
-        canvas.selection = true;
       };
 
       canvas.on("mouse:down", handleCanvasMouseDown);
       canvas.on("mouse:move", handleCanvasMouseMove);
       canvas.on("mouse:up", handleCanvasMouseUp);
-      canvas.on("object:modified", handleObjectModified);
 
       return () => {
         canvas.off("mouse:down", handleCanvasMouseDown);
         canvas.off("mouse:move", handleCanvasMouseMove);
         canvas.off("mouse:up", handleCanvasMouseUp);
-        canvas.off("object:modified", handleObjectModified);
       };
+    } else if (activeTool === "stamp") {
+      // Placeholder for stamp tool implementation
+      console.log("Stamp tool selected - functionality not yet implemented");
+      // Auto-deselect tool after use
+      if (setActiveTool) {
+        setTimeout(() => {
+          setActiveTool("select");
+        }, 100);
+      }
+    } else if (activeTool === "shapes") {
+      // This is just a parent category in the toolbar, not an actual tool
+      // Auto-select rectangle as default shape
+      if (setActiveTool) {
+        setActiveTool("rectangle");
+      }
+    } else if (activeTool === "image" && fileInputRef.current) {
+      fileInputRef.current.click();
     } else {
       // Other drawing tools
       canvas.isDrawingMode = false;
@@ -662,17 +627,27 @@ export default function LiveCanvas({
     reader.onload = (event) => {
       if (!event.target?.result) return;
 
+      // Create a unique filename for the image
+      const fileExtension = file.name.split(".").pop() || "png";
+      const uniqueId = nanoid(8);
+      const fileName = `image-${uniqueId}.${fileExtension}`;
+
+      // In a real implementation, we would upload the file to the server here
+      // For now, we'll use the data URL directly
+      const imageUrl = event.target.result.toString();
+
       // Create a fabric Image object
-      fabric.Image.fromURL(event.target.result.toString(), {
+      fabric.Image.fromURL(imageUrl, {
         // @ts-ignore - Fabric types are not accurate for this method
         onload: (img: fabric.Image) => {
           // Scale image to fit within the canvas
           const maxWidth = canvas.width! * 0.8;
           const maxHeight = canvas.height! * 0.8;
 
+          let scaleFactor = 1;
           if (img.width && img.height) {
             if (img.width > maxWidth || img.height > maxHeight) {
-              const scaleFactor = Math.min(
+              scaleFactor = Math.min(
                 maxWidth / img.width,
                 maxHeight / img.height,
               );
@@ -681,10 +656,26 @@ export default function LiveCanvas({
           }
 
           // Center the image on the canvas
+          const left = canvas.width! / 2 - (img.width! * (img.scaleX || 1)) / 2;
+          const top =
+            canvas.height! / 2 - (img.height! * (img.scaleY || 1)) / 2;
+
           img.set({
-            left: canvas.width! / 2 - (img.width! * (img.scaleX || 1)) / 2,
-            top: canvas.height! / 2 - (img.height! * (img.scaleY || 1)) / 2,
+            left: left,
+            top: top,
           });
+
+          // Add custom properties to the image
+          (img as any).originalFile = {
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            uniqueFileName: fileName,
+          };
+
+          // Set the image source as a property that can be serialized
+          (img as any).src = imageUrl;
+          (img as any).alt = file.name;
 
           canvas.add(img);
           canvas.setActiveObject(img);
@@ -702,6 +693,8 @@ export default function LiveCanvas({
           if (setActiveTool) {
             setActiveTool("select");
           }
+
+          console.log(`Image added: ${fileName}`);
         },
       });
     };
