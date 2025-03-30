@@ -79,7 +79,7 @@ function WhiteboardContent({ boardData }: WhiteboardProps) {
 
         <div className="relative mt-16 flex h-[calc(100svh-64px)] flex-1 overflow-hidden">
           <RoomProvider
-            id={`board-${boardData.name}`}
+            id={`board-${boardData.id}`}
             initialPresence={{
               cursor: null,
               selection: null,
@@ -95,7 +95,7 @@ function WhiteboardContent({ boardData }: WhiteboardProps) {
                   <div className="relative flex-1 overflow-hidden">
                     <ZoomControls />
                     <LiveCanvas
-                      boardId={boardData.name}
+                      boardId={boardData.id}
                       activeTool={activeTool}
                       currentColor={currentColor}
                       scale={scale}

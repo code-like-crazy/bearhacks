@@ -57,7 +57,7 @@ const JoinBoardPage = () => {
       }
 
       toast.success(response.message);
-      router.push(`/`);
+      router.push(`/board/${boardId}`);
     });
   };
 

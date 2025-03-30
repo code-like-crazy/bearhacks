@@ -19,7 +19,25 @@ export const getRecentBoards = async (limit: number = 5) => {
     if (fetchedBoards === null) {
       error = "Could not fetch boards. Are you logged in?";
     } else if (fetchedBoards.length > 0) {
-      const latestBoards = fetchedBoards.slice(0, limit);
+      // Create a Map to store unique boards by ID
+      const uniqueBoards = new Map<string, SelectBoard>();
+
+      // Keep only the most recent occurrence of each board
+      fetchedBoards.forEach((board) => {
+        if (!uniqueBoards.has(board.id)) {
+          uniqueBoards.set(board.id, board);
+        }
+      });
+
+      // Convert Map back to array and get the latest boards
+      const latestBoards = Array.from(uniqueBoards.values())
+        .sort((a, b) => {
+          const timeA = a.createdAt ?? 0;
+          const timeB = b.createdAt ?? 0;
+          return timeB - timeA;
+        })
+        .slice(0, limit);
+
       boards = await Promise.all(
         latestBoards.map(async (board: SelectBoard) => {
           const creator = await getUserById(board.creatorId);

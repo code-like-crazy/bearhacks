@@ -52,6 +52,8 @@ const LiveCanvas = forwardRef<LiveCanvasRef, LiveCanvasProps>(
     const [currentShape, setCurrentShape] = useState<fabric.Object | null>(
       null,
     );
+    // Liveblocks hooks
+    const roomId = `board-${boardId}`;
 
     // Liveblocks hooks
     const others = useOthers();
