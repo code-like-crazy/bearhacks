@@ -49,7 +49,11 @@ const formItemVariants = {
   visible: { opacity: 1, y: 0 },
 };
 
-const CreateBoardModal = () => {
+interface CreateBoardModalProps {
+  children?: React.ReactNode;
+}
+
+const CreateBoardModal = ({ children }: CreateBoardModalProps) => {
   const [isPending, startTransition] = useTransition();
   const [isOpen, setIsOpen] = useState(false);
 
@@ -89,7 +93,11 @@ const CreateBoardModal = () => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button>Create Board</Button>
+        {children || (
+          <Button size="lg" className="font-semibold" variant="secondary">
+            Create Board
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent className="sm:max-w-xl">
         <motion.div

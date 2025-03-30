@@ -1,16 +1,26 @@
 "server only";
 
-import fs from "fs";
-import path from "path";
 import { and, eq } from "drizzle-orm";
 import { nanoid } from "nanoid";
 
 import { db } from "@/lib/db";
 import { usersTable } from "@/lib/db/schema";
 
+const avatars = [
+  "bear.jpg",
+  "bear2.jpg",
+  "bee.jpg",
+  "cat.jpg",
+  "cat2.jpg",
+  "dog.jpg",
+  "dog2.jpg",
+  "dragon.jpg",
+  "pink-panther.jpg",
+  "porcupine.jpg",
+  "unicorn.jpg",
+];
+
 const getRandomAvatar = () => {
-  const avatarDir = path.join(process.cwd(), "public/avatars");
-  const avatars = fs.readdirSync(avatarDir);
   const randomAvatar = avatars[Math.floor(Math.random() * avatars.length)];
   return `/avatars/${randomAvatar}`;
 };
