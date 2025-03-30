@@ -1,10 +1,8 @@
 "use client";
 
-import { motion } from "framer-motion";
 import {
   Camera,
   Circle,
-  Diamond,
   Eraser,
   Hand,
   MousePointer,
@@ -133,8 +131,8 @@ export default function ToolBar({
 
   return (
     <TooltipProvider>
-      <div className="bg-background flex justify-center border-t p-4">
-        <div className="bg-muted/30 flex items-center gap-2 rounded-full p-2 shadow-sm">
+      <div className="flex justify-center border-t p-4">
+        <div className="mr-72 flex items-center gap-2 rounded-full border p-2 shadow-sm">
           {tools.map((tool) => (
             <Tooltip key={tool.id}>
               <Popover>
@@ -147,7 +145,7 @@ export default function ToolBar({
                           ? "default"
                           : "ghost"
                       }
-                      className="relative h-12 w-12 rounded-full"
+                      className="relative size-12 rounded-full"
                       onClick={() => onToolChange(tool.id as ToolType)}
                     >
                       {tool.icon}
@@ -161,7 +159,7 @@ export default function ToolBar({
                         <Button
                           key={shape.id}
                           size="icon"
-                          className="h-8 w-8"
+                          className="size-8"
                           onClick={() => onToolChange(shape.id as ToolType)}
                         >
                           {shape.icon}
@@ -176,7 +174,7 @@ export default function ToolBar({
                         <Button
                           key={stamp.id}
                           size="icon"
-                          className="h-8 w-8 text-lg"
+                          className="size-8 text-lg"
                           onClick={() => {
                             // Store the selected emoji in localStorage
                             localStorage.setItem("selectedEmoji", stamp.emoji);

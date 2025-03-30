@@ -7,14 +7,14 @@ interface ColorPickerProps {
 
 export function ColorPicker({ color, onChange }: ColorPickerProps) {
   const colors = [
-    "#FF9B9B", // Red
-    "#FFD699", // Orange
-    "#FDFF8F", // Yellow
-    "#91F48F", // Green
-    "#9EFFFF", // Cyan
-    "#B69CFF", // Purple
-    "#FFC8F0", // Pink
+    "#f87171", // Red
+    "#fb923c", // Orange
+    "#fde047", // Yellow
+    "#4ade80", // Green
+    "#60a5fa", // Blue
+    "#c084fc", // Purple
     "#FFFFFF", // White
+    "#111111", // Black
   ];
 
   return (
