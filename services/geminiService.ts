@@ -1,3 +1,5 @@
+import axios from 'axios';
+
 import {
   GoogleGenerativeAI,
   FunctionDeclaration,
@@ -10,7 +12,6 @@ import {
 } from "@google/generative-ai";
 import { SelectAiOutput } from "@/lib/db/schema"; // For potential return type hinting
 
-
 // --- Configuration ---
 const API_KEY = process.env.GEMINI_API_KEY;
 if (!API_KEY) {
@@ -20,7 +21,8 @@ if (!API_KEY) {
 const genAI = new GoogleGenerativeAI(API_KEY);
 
 const generationConfig = {
-  // temperature: 0.7, // Adjust creativity vs. factuality
+  temperature: 0.9, // Adjust creativity vs. factuality
+  topP: 1, // Adjust the probability threshold for token selection
 };
 
 const safetySettings = [
@@ -109,34 +111,126 @@ type HotelResult = { id: string; name: string; pricePerNight: number; rating?: n
 type ImageResult = { imageUrl: string };
 
 // Placeholder functions for calling external APIs
+
+const TRAVEL_ADVISOR_API_KEY = "a462edae62msh505ff93a62af7b0p15813ajsn41b41771d1e9"; // Replace with your actual Travel Advisor API key
+const BOOKING_COM_API_KEY = "a462edae62msh505ff93a62af7b0p15813ajsn41b41771d1e9"; // Replace with your actual Booking.com API key
+
 async function callFlightSearchAPI(args: any): Promise<FlightResult[]> {
-    console.log("--- MOCK: Calling Flight Search API ---", args);
-    // Replace with actual API call
-    await new Promise(resolve => setTimeout(resolve, 500)); // Simulate network delay
+    console.log("--- Calling Travel Advisor API ---", args);
+    // Replace with actual API call to Travel Advisor
+    try {
+        const response = await axios.get('https://travel-advisor.p.rapidapi.com/flights/search', {
+            params: {
+                departureAirportCode: args.destination, // Assuming destination is the departure airport for now
+                arrivalAirportCode: args.destination, // Assuming destination is the arrival airport for now
+                departureDate: args.departureDate,
+                adults: args.adults || '1',
+                currency: args.currency || 'USD',
+                units: args.units || 'km',
+                lang: args.lang || 'en_US'
+            },
+            headers: {
+                'X-RapidAPI-Key': TRAVEL_ADVISOR_API_KEY, // Use the API key here
+                'X-RapidAPI-Host': 'travel-advisor.p.rapidapi.com'
+            }
+        });
+
+        // Process the response and map to FlightResult type
+        console.log("Travel Advisor API Response:", response.data);
+        const flights = response.data.data.map((flight: any) => ({
+            id: flight.id,
+            airline: flight.airline,
+            price: flight.price,
+            departure: flight.departureTime,
+        }));
+        return flights;
+    } catch (error: any) {
+        console.error("Error calling Travel Advisor API:", error);
+        throw new Error(`Travel Advisor API error: ${error.message}`);
+    }
+
     // Return mock data matching schema structure
-    return [
-        { id: `fl-${Date.now()}`, airline: "MockAir", price: Math.round(Math.random() * 500 + 300), departure: `${args.departureDate}T09:00:00Z` },
-        { id: `fl-${Date.now()+1}`, airline: "CloudHop", price: Math.round(Math.random() * 500 + 350), departure: `${args.departureDate}T11:30:00Z` },
-    ];
+    // return [
+    //     { id: `fl-${Date.now()}`, airline: "MockAir", price: Math.round(Math.random() * 500 + 300), departure: `${args.departureDate}T09:00:00Z` },
+    //     { id: `fl-${Date.now()+1}`, airline: "CloudHop", price: Math.round(Math.random() * 500 + 350), departure: `${args.departureDate}T11:30:00Z` },
+    // ];
 }
 
 async function callHotelSearchAPI(args: any): Promise<HotelResult[]> {
-    console.log("--- MOCK: Calling Hotel Search API ---", args);
-    // Replace with actual API call
-    await new Promise(resolve => setTimeout(resolve, 500));
-    // Return mock data matching schema structure
-    return [
-        { id: `htl-${Date.now()}`, name: "The Mock Hotel", pricePerNight: Math.round(Math.random() * 150 + 80), rating: 4.5 },
-        { id: `htl-${Date.now()+1}`, name: "Placeholder Inn", pricePerNight: Math.round(Math.random() * 100 + 50), rating: 3.8 },
-    ];
+    console.log("--- Calling Booking.com API ---", args);
+    // Replace with actual API call to Booking.com
+    const options = {
+        method: 'GET',
+        url: 'https://booking-com15.p.rapidapi.com/api/v1/hotels/searchHotelsByCoordinates',
+        params: {
+            latitude: args.latitude,
+            longitude: args.longitude,
+            arrival_date: args.checkInDate,
+            departure_date: args.checkOutDate,
+            adults: args.numberOfGuests || '1',
+            children_age: '0,17',
+            room_qty: '1',
+            units: 'metric',
+            page_number: '1',
+            temperature_unit: 'c',
+            languagecode: 'en-us',
+            currency_code: 'EUR',
+            location: args.destination
+        },
+        headers: {
+            'x-rapidapi-key': TRAVEL_ADVISOR_API_KEY, // Use the API key here
+            'x-rapidapi-host': 'booking-com15.p.rapidapi.com'
+        }
+    };
+
+    try {
+        const response = await axios.request(options);
+        console.log("Booking.com API Response:", response.data);
+        // Process the response and map to HotelResult type
+        // This is just an example, the actual response structure may vary
+        const hotels = [{
+            id: 'hotel-1',
+            name: 'Example Hotel',
+            pricePerNight: 100,
+            rating: 4.5
+        }];
+        return hotels;
+    } catch (error: any) {
+        console.error("Error calling Booking.com API:", error);
+        throw new Error(`Booking.com API error: ${error.message}`);
+    }
 }
 
 async function callImageGenerationAPI(args: any): Promise<ImageResult> {
-    console.log("--- MOCK: Calling Image Generation API ---", args);
-    // Replace with actual API call (e.g., Imagen on Vertex AI, DALL-E, Stable Diffusion)
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    // Return mock data matching schema structure
-    return { imageUrl: `https://via.placeholder.com/400x300.png?text=${encodeURIComponent(args.destinationDescription)}` };
+    console.log("--- Calling Image Generation API ---", args);
+    const GEMINI_IMAGE_API_KEY = process.env.GEMINI_API_KEY;
+
+    if (!GEMINI_IMAGE_API_KEY) {
+        console.error("GEMINI_API_KEY environment variable is not set.");
+        return { imageUrl: "" };
+    }
+
+    const genAI = new GoogleGenerativeAI(GEMINI_IMAGE_API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-pro-vision" });
+
+    const prompt = `Generate a visually appealing image representing the travel destination: ${args.destinationDescription}`;
+
+    try {
+        const result = await model.generateContent([prompt]);
+        const response = result.response;
+        const imagePart = response.candidates?.[0]?.content?.parts?.[0];
+
+        if (imagePart?.inlineData?.data && imagePart?.inlineData?.mimeType) {
+            const imageUrl = `data:${imagePart.inlineData.mimeType};base64,${imagePart.inlineData.data}`;
+            return { imageUrl: imageUrl };
+        } else {
+            console.error("No image data found in the response.");
+            return { imageUrl: "" };
+        }
+    } catch (error: any) {
+        console.error("Error generating image:", error);
+        return { imageUrl: "" };
+    }
 }
 
 
@@ -197,12 +291,16 @@ Then, call the necessary functions to get flight options, hotel options, and a d
 
       try {
         if (functionName === "searchFlights") {
+          console.log("Calling searchFlights with args:", args);
           apiResponseContent = await callFlightSearchAPI(args);
+          console.log("searchFlights API Response:", apiResponseContent);
           functionCallData.flights = apiResponseContent; // Store result
           success = true;
         } else if (functionName === "searchHotels") {
+          console.log("Calling searchHotels with args:", args);
           apiResponseContent = await callHotelSearchAPI(args);
-           functionCallData.hotels = apiResponseContent; // Store result
+           console.log("searchHotels API Response:", apiResponseContent);
+          functionCallData.hotels = apiResponseContent; // Store result
           success = true;
         } else if (functionName === "generateDestinationImage") {
           apiResponseContent = await callImageGenerationAPI(args);
