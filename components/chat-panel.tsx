@@ -1,9 +1,11 @@
 "use client";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { motion } from "framer-motion";
+import { MessageCircle } from "lucide-react";
 
 import { AIChat } from "./chat/ai-chat";
 import { TeamChat } from "./chat/team-chat";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 
 interface ChatPanelProps {
   geminiResponse: string | null;
@@ -11,8 +13,22 @@ interface ChatPanelProps {
 
 export default function ChatPanel({ geminiResponse }: ChatPanelProps) {
   return (
-    <div className="z-30 flex w-72 flex-col border-l border-l-gray-200 bg-gray-50">
-      <div className="border-b p-3">
+    <motion.div
+      initial={{ x: 100, opacity: 0 }}
+      animate={{ x: 0, opacity: 1 }}
+      transition={{ type: "spring", stiffness: 100 }}
+      className="z-30 flex w-72 flex-col border-l border-l-gray-200 bg-white/95 backdrop-blur-md"
+    >
+      <motion.div
+        initial={{ y: -20 }}
+        animate={{ y: 0 }}
+        className="flex items-center gap-2 border-b bg-white/80 p-4"
+      >
+        <MessageCircle className="text-primary h-5 w-5" />
+        <h3 className="text-primary font-semibold">Chat</h3>
+      </motion.div>
+
+      <div className="p-3">
         <Tabs defaultValue="team" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="team">Team Chat</TabsTrigger>
@@ -26,6 +42,6 @@ export default function ChatPanel({ geminiResponse }: ChatPanelProps) {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </motion.div>
   );
 }

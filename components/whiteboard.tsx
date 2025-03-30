@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { LiveList, LiveMap } from "@liveblocks/client";
-import { ClientSideSuspense } from "@liveblocks/react";
+import { ClientSideSuspense, LiveblocksProvider } from "@liveblocks/react";
 
 import { type boards } from "@/lib/db/schema";
 import { RoomProvider } from "@/lib/liveblocks.config";
@@ -78,36 +78,42 @@ function WhiteboardContent({ boardData }: WhiteboardProps) {
         <Navbar boardName={boardName} onGenerateClick={handleGenerateClick} />
 
         <div className="relative mt-16 flex h-[calc(100svh-64px)] flex-1 overflow-hidden">
-          <RoomProvider
-            id={`board-${boardData.id}`}
-            initialPresence={{
-              cursor: null,
-              selection: null,
-            }}
-            initialStorage={{
-              canvasObjects: new LiveMap(),
-              chatMessages: new LiveList([]),
-            }}
+          <LiveblocksProvider
+            publicApiKey={
+              "pk_dev_rMt1qhur35pmoK4T3aW1u_PRhLoudsvMX6dhFAh_aeohjLsyYqt93LDl_aBqdpoa"
+            }
           >
-            <ClientSideSuspense fallback={<div>Loading...</div>}>
-              {() => (
-                <>
-                  <div className="relative flex-1 overflow-hidden">
-                    <ZoomControls />
-                    <LiveCanvas
-                      boardId={boardData.id}
-                      activeTool={activeTool}
-                      currentColor={currentColor}
-                      scale={scale}
-                      position={position}
-                      setActiveTool={setActiveTool}
-                    />
-                  </div>
-                  <ChatPanel geminiResponse={geminiResponse} />
-                </>
-              )}
-            </ClientSideSuspense>
-          </RoomProvider>
+            <RoomProvider
+              id={`board-${boardData.id}`}
+              initialPresence={{
+                cursor: null,
+                selection: null,
+              }}
+              initialStorage={{
+                canvasObjects: new LiveMap(),
+                chatMessages: new LiveList([]),
+              }}
+            >
+              <ClientSideSuspense fallback={<div>Loading...</div>}>
+                {() => (
+                  <>
+                    <div className="relative flex-1 overflow-hidden">
+                      <ZoomControls />
+                      <LiveCanvas
+                        boardId={boardData.id}
+                        activeTool={activeTool}
+                        currentColor={currentColor}
+                        scale={scale}
+                        position={position}
+                        setActiveTool={setActiveTool}
+                      />
+                    </div>
+                    <ChatPanel geminiResponse={geminiResponse} />
+                  </>
+                )}
+              </ClientSideSuspense>
+            </RoomProvider>
+          </LiveblocksProvider>
         </div>
 
         <ToolBar
