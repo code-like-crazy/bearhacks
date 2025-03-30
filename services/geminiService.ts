@@ -21,7 +21,8 @@ if (!API_KEY) {
 const genAI = new GoogleGenerativeAI(API_KEY);
 
 const generationConfig = {
-  // temperature: 0.7, // Adjust creativity vs. factuality
+  temperature: 0.9, // Adjust creativity vs. factuality
+  topP: 1, // Adjust the probability threshold for token selection
 };
 
 const safetySettings = [
@@ -201,11 +202,35 @@ async function callHotelSearchAPI(args: any): Promise<HotelResult[]> {
 }
 
 async function callImageGenerationAPI(args: any): Promise<ImageResult> {
-    console.log("--- MOCK: Calling Image Generation API ---", args);
-    // Replace with actual API call (e.g., Imagen on Vertex AI, DALL-E, Stable Diffusion)
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    // Return mock data matching schema structure
-    return { imageUrl: `https://via.placeholder.com/400x300.png?text=${encodeURIComponent(args.destinationDescription)}` };
+    console.log("--- Calling Image Generation API ---", args);
+    const GEMINI_IMAGE_API_KEY = process.env.GEMINI_API_KEY;
+
+    if (!GEMINI_IMAGE_API_KEY) {
+        console.error("GEMINI_API_KEY environment variable is not set.");
+        return { imageUrl: "" };
+    }
+
+    const genAI = new GoogleGenerativeAI(GEMINI_IMAGE_API_KEY);
+    const model = genAI.getGenerativeModel({ model: "gemini-pro-vision" });
+
+    const prompt = `Generate a visually appealing image representing the travel destination: ${args.destinationDescription}`;
+
+    try {
+        const result = await model.generateContent([prompt]);
+        const response = result.response;
+        const imagePart = response.candidates?.[0]?.content?.parts?.[0];
+
+        if (imagePart?.inlineData?.data && imagePart?.inlineData?.mimeType) {
+            const imageUrl = `data:${imagePart.inlineData.mimeType};base64,${imagePart.inlineData.data}`;
+            return { imageUrl: imageUrl };
+        } else {
+            console.error("No image data found in the response.");
+            return { imageUrl: "" };
+        }
+    } catch (error: any) {
+        console.error("Error generating image:", error);
+        return { imageUrl: "" };
+    }
 }
 
 
