@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import Image from "next/image";
 import { createBoard } from "@/services/actions/boards/create-board";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion } from "motion/react";
@@ -27,20 +26,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-
-const avatarImages = [
-  "bear.jpg",
-  "bear2.jpg",
-  "bee.jpg",
-  "cat.jpg",
-  "cat2.jpg",
-  "dog.jpg",
-  "dog2.jpg",
-  "dragon.jpg",
-  "pink-panther.jpg",
-  "porcupine.jpg",
-  "unicorn.jpg",
-];
 
 type CreateBoardFormValues = z.infer<typeof createBoardSchema>;
 
@@ -99,7 +84,7 @@ const CreateBoardModal = ({ children }: CreateBoardModalProps) => {
           </Button>
         )}
       </DialogTrigger>
-      <DialogContent className="sm:max-w-xl">
+      <DialogContent className="px-8 sm:max-w-xl">
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -112,7 +97,7 @@ const CreateBoardModal = ({ children }: CreateBoardModalProps) => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3 }}
             >
-              <DialogTitle className="text-2xl font-bold">
+              <DialogTitle className="text-3xl font-bold">
                 Create a New Board
               </DialogTitle>
             </motion.div>
@@ -120,7 +105,7 @@ const CreateBoardModal = ({ children }: CreateBoardModalProps) => {
           <Form {...form}>
             <motion.form
               onSubmit={form.handleSubmit(onSubmit)}
-              className="space-y-8"
+              className="space-y-10 pt-4"
               initial="hidden"
               animate="visible"
               variants={{
@@ -144,58 +129,10 @@ const CreateBoardModal = ({ children }: CreateBoardModalProps) => {
                         <Input
                           {...field}
                           placeholder="My Amazing Board"
-                          className="h-12"
+                          className="h-12 text-base"
                           disabled={isPending}
                         />
                       </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </motion.div>
-
-              <motion.div variants={formItemVariants}>
-                <FormField
-                  control={form.control}
-                  name="selectedImage"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="text-lg">
-                        Select Board Image
-                      </FormLabel>
-                      <div className="h-[300px] overflow-y-auto rounded-lg border p-4">
-                        <motion.div
-                          className="grid min-h-fit grid-cols-3 content-start gap-4 sm:grid-cols-4"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ duration: 0.2 }}
-                        >
-                          {avatarImages.map((image) => (
-                            <motion.div
-                              key={image}
-                              initial={{ opacity: 0, scale: 0.8 }}
-                              animate={{ opacity: 1, scale: 1 }}
-                              transition={{ duration: 0.2 }}
-                              className={`relative row-span-1 aspect-square cursor-pointer overflow-hidden rounded-lg border-2 bg-black transition hover:opacity-75 ${
-                                field.value === `/avatars/${image}`
-                                  ? "border-blue-500 ring-2 ring-blue-500"
-                                  : "border-transparent"
-                              }`}
-                              onClick={() =>
-                                field.onChange(`/avatars/${image}`)
-                              }
-                            >
-                              <Image
-                                src={`/avatars/${image}`}
-                                alt={image}
-                                fill
-                                className="object-cover select-none"
-                                sizes="128px"
-                              />
-                            </motion.div>
-                          ))}
-                        </motion.div>
-                      </div>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -215,11 +152,11 @@ const CreateBoardModal = ({ children }: CreateBoardModalProps) => {
                         <Input
                           {...field}
                           placeholder="e.g., FUNBOARD"
-                          className="h-12"
+                          className="h-12 text-base"
                           disabled={isPending}
                         />
                       </FormControl>
-                      <p className="text-muted-foreground text-sm">
+                      <p className="text-muted-foreground mt-2 text-sm">
                         Your invite code will be used to join the board. A
                         random invite code will be generated if you leave it
                         blank.

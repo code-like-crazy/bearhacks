@@ -3,6 +3,8 @@ import { Cat } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 import CreateBoardModal from "../modals/CreateBoardModal";
+import JoinBoardModal from "../modals/JoinBoardModal";
+import SidebarUser from "./SidebarUser";
 
 const Sidebar = ({ className }: { className?: string }) => {
   return (
@@ -24,8 +26,7 @@ const Sidebar = ({ className }: { className?: string }) => {
           {/* Modal buttons */}
           <div className="flex flex-col gap-2.5">
             <CreateBoardModal />
-            <CreateBoardModal />
-            <CreateBoardModal />
+            <JoinBoardModal />
           </div>
 
           {/* List of boards */}
@@ -36,7 +37,7 @@ const Sidebar = ({ className }: { className?: string }) => {
         </div>
 
         {/* User management */}
-        <div>asdf</div>
+        <SidebarUser />
       </div>
     </aside>
   );

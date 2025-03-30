@@ -1,6 +1,6 @@
 import { cache } from "react";
 import bcrypt from "bcryptjs";
-import NextAuth, { DefaultSession } from "next-auth";
+import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 
 import { signInSchema } from "./lib/validations/auth";
