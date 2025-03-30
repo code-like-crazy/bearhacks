@@ -61,10 +61,11 @@ function WhiteboardContent() {
 
   const handleColorChange = (color: string) => {
     setCurrentColor(color);
+    setActiveTool("select");
   };
 
   return (
-    <div className="flex h-full w-full overflow-hidden bg-black">
+    <div className="flex h-full w-full overflow-hidden bg-[#F5F5F5]">
       <div className="flex flex-1 flex-col overflow-hidden">
         <Navbar boardName={boardName} />
 

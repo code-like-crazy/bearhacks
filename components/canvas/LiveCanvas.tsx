@@ -237,12 +237,13 @@ export default function LiveCanvas({
         const stickyWidth = 250;
         const stickyHeight = 180;
 
-        // Create a sticky note directly
+        // Create a group for the sticky note
+        // First, create the background rectangle
         const stickyNote = new fabric.Rect({
           width: stickyWidth,
           height: stickyHeight,
-          left: pointer.x,
-          top: pointer.y,
+          left: 0,
+          top: 0,
           fill: currentColor,
           rx: 5,
           ry: 5,
@@ -254,14 +255,11 @@ export default function LiveCanvas({
           }),
         });
 
-        // Add the sticky note to canvas
-        canvas.add(stickyNote);
-
-        // Create editable text on top
+        // Create editable text
         const textbox = new fabric.Textbox("Double-click to edit", {
           width: stickyWidth - 20,
-          left: pointer.x + 10,
-          top: pointer.y + 10,
+          left: 10,
+          top: 10,
           fontSize: 16,
           fontFamily: "Arial",
           fill: "#333333",
@@ -270,61 +268,55 @@ export default function LiveCanvas({
 
         // Create author text
         const authorText = new fabric.Text("User", {
-          left: pointer.x + stickyWidth - 40,
-          top: pointer.y + stickyHeight - 20,
+          left: stickyWidth - 40,
+          top: stickyHeight - 20,
           fontSize: 12,
           fontFamily: "Arial",
           fill: "#666666",
         });
 
-        // Add text elements to canvas
-        canvas.add(textbox);
-        canvas.add(authorText);
+        // Create a group with all elements
+        const stickyGroup = new fabric.Group([stickyNote, authorText], {
+          left: pointer.x,
+          top: pointer.y,
+          subTargetCheck: true,
+        });
 
-        // Store positions for tracking movement
-        const initialPositions = {
-          note: { left: stickyNote.left || 0, top: stickyNote.top || 0 },
-          text: { left: textbox.left || 0, top: textbox.top || 0 },
-          author: { left: authorText.left || 0, top: authorText.top || 0 },
-        };
+        // Add the group to canvas
+        canvas.add(stickyGroup);
+
+        // Add textbox separately to allow independent editing
+        textbox.set({
+          left: pointer.x + 10,
+          top: pointer.y + 10,
+        });
+        canvas.add(textbox);
 
         // Set up movement synchronization
-        const moveAllElements = (opt: any) => {
-          if (opt.target === stickyNote) {
-            const dx = (stickyNote.left || 0) - initialPositions.note.left;
-            const dy = (stickyNote.top || 0) - initialPositions.note.top;
-
+        const moveTextWithGroup = (opt: any) => {
+          if (opt.target === stickyGroup) {
             textbox.set({
-              left: initialPositions.text.left + dx,
-              top: initialPositions.text.top + dy,
+              left: stickyGroup.left! + 10,
+              top: stickyGroup.top! + 10,
             });
-
-            authorText.set({
-              left: initialPositions.author.left + dx,
-              top: initialPositions.author.top + dy,
-            });
-
             canvas.renderAll();
           }
         };
 
         // Add event listeners for synchronized movement
-        canvas.on("object:moving", moveAllElements);
+        canvas.on("object:moving", moveTextWithGroup);
 
         // Add custom property to identify related elements
         const stickyId = nanoid();
-        (stickyNote as any).stickyId = stickyId;
+        (stickyGroup as any).stickyId = stickyId;
         (textbox as any).stickyId = stickyId;
-        (authorText as any).stickyId = stickyId;
 
         // Sync to storage
-        (stickyNote as any).objectId = `sticky-${stickyId}-bg`;
+        (stickyGroup as any).objectId = `sticky-${stickyId}-group`;
         (textbox as any).objectId = `sticky-${stickyId}-text`;
-        (authorText as any).objectId = `sticky-${stickyId}-author`;
 
-        syncObjectToStorage(stickyNote);
+        syncObjectToStorage(stickyGroup);
         syncObjectToStorage(textbox);
-        syncObjectToStorage(authorText);
 
         // Add deletion handler to remove all related elements
         const handleObjectRemoved = (opt: any) => {
@@ -460,23 +452,18 @@ export default function LiveCanvas({
     // Handle drawing mode for pencil
     if (activeTool === "pencil") {
       canvas.isDrawingMode = true;
-      if (canvas.freeDrawingBrush) {
-        canvas.freeDrawingBrush.color = currentColor;
-        canvas.freeDrawingBrush.width = 3;
-      }
+
+      // Create a new pencil brush
+      const pencilBrush = new fabric.PencilBrush(canvas);
+      pencilBrush.color = currentColor;
+      pencilBrush.width = 3;
+      canvas.freeDrawingBrush = pencilBrush;
 
       // Add event listener for path created
       const handlePathCreated = (e: any) => {
         const path = e.path;
         if (path) {
           syncObjectToStorage(path);
-
-          // Auto-deselect tool after drawing
-          if (setActiveTool) {
-            setTimeout(() => {
-              setActiveTool("select");
-            }, 100);
-          }
         }
       };
 
@@ -488,21 +475,18 @@ export default function LiveCanvas({
     } else if (activeTool === "eraser") {
       // Set up eraser mode
       canvas.isDrawingMode = true;
-      if (canvas.freeDrawingBrush) {
-        canvas.freeDrawingBrush.color = "#f3f4f6"; // Background color
-        canvas.freeDrawingBrush.width = 20; // Wider brush for eraser
-      }
 
-      // Add event listener for path created (to auto-deselect after erasing)
+      // Create a new pencil brush for erasing
+      const eraserBrush = new fabric.PencilBrush(canvas);
+      eraserBrush.color = "#f3f4f6"; // Background color
+      eraserBrush.width = 20; // Wider brush for eraser
+      canvas.freeDrawingBrush = eraserBrush;
+
+      // Add event listener for path created
       const handlePathCreated = (e: any) => {
         const path = e.path;
         if (path) {
-          // Auto-deselect tool after erasing
-          if (setActiveTool) {
-            setTimeout(() => {
-              setActiveTool("select");
-            }, 100);
-          }
+          syncObjectToStorage(path);
         }
       };
 
@@ -586,14 +570,57 @@ export default function LiveCanvas({
         canvas.off("mouse:up", handleCanvasMouseUp);
       };
     } else if (activeTool === "stamp") {
-      // Placeholder for stamp tool implementation
-      console.log("Stamp tool selected - functionality not yet implemented");
-      // Auto-deselect tool after use
-      if (setActiveTool) {
-        setTimeout(() => {
-          setActiveTool("select");
-        }, 100);
-      }
+      // Implement emoji stamp functionality
+      canvas.isDrawingMode = false;
+      canvas.selection = true;
+
+      // Create a stamp handler
+      const handleStampClick = (opt: any) => {
+        if (!canvas) return;
+
+        const pointer = canvas.getPointer(opt.e);
+
+        // Get the selected emoji from localStorage, or use a default
+        const emoji = localStorage.getItem("selectedEmoji") || "👍";
+
+        // Create a text object with the emoji
+        const stamp = new fabric.Text(emoji, {
+          left: pointer.x,
+          top: pointer.y,
+          fontSize: 40,
+          fontFamily: "Arial",
+          fill: currentColor,
+          originX: "center",
+          originY: "center",
+          selectable: true,
+          hasControls: true,
+          hasBorders: true,
+        });
+
+        // Add custom property to identify as a stamp
+        (stamp as any).isStamp = true;
+        (stamp as any).emoji = emoji;
+
+        canvas.add(stamp);
+        canvas.setActiveObject(stamp);
+        canvas.renderAll();
+
+        // Sync to storage
+        syncObjectToStorage(stamp);
+
+        // Switch back to select tool after placing stamp
+        if (setActiveTool) {
+          setTimeout(() => {
+            setActiveTool("select");
+          }, 100);
+        }
+      };
+
+      canvas.on("mouse:down", handleStampClick);
+
+      return () => {
+        canvas.off("mouse:down", handleStampClick);
+      };
     } else if (activeTool === "shapes") {
       // This is just a parent category in the toolbar, not an actual tool
       // Auto-select rectangle as default shape
@@ -613,6 +640,7 @@ export default function LiveCanvas({
   // Handle image upload
   useEffect(() => {
     if (activeTool === "image" && fileInputRef.current) {
+      // Only trigger file input click if it's a new selection of the image tool
       fileInputRef.current.click();
     }
   }, [activeTool]);
@@ -700,6 +728,11 @@ export default function LiveCanvas({
     };
 
     reader.readAsDataURL(file);
+
+    // Switch to select tool immediately to prevent multiple file dialogs
+    if (setActiveTool) {
+      setActiveTool("select");
+    }
   };
 
   return (

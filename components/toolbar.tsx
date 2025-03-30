@@ -50,49 +50,53 @@ export default function ToolBar({
       id: "select",
       icon: <MousePointer className="h-6 w-6" />,
       label: "Select",
-      showColorPicker: false,
     },
     {
       id: "grab",
       icon: <Hand className="h-6 w-6" />,
       label: "Move Canvas",
-      showColorPicker: false,
     },
     {
       id: "sticky",
       icon: <StickyNote className="h-6 w-6" />,
       label: "Sticky Note",
-      showColorPicker: true,
     },
     {
       id: "image",
       icon: <Camera className="h-6 w-6" />,
       label: "Upload Image",
-      showColorPicker: false,
     },
     {
       id: "pencil",
       icon: <Pencil className="h-6 w-6" />,
       label: "Draw",
-      showColorPicker: true,
     },
     {
       id: "text",
       icon: <Text className="h-6 w-6" />,
       label: "Add Text",
-      showColorPicker: false,
     },
     {
       id: "eraser",
       icon: <Eraser className="h-6 w-6" />,
       label: "Erase",
-      showColorPicker: false,
     },
     {
       id: "stamp",
       icon: <Stamp className="h-6 w-6" />,
       label: "Stamps",
-      showColorPicker: false,
+      stampOptions: [
+        { id: "👍", emoji: "👍" },
+        { id: "👎", emoji: "👎" },
+        { id: "❤️", emoji: "❤️" },
+        { id: "🔥", emoji: "🔥" },
+        { id: "⭐", emoji: "⭐" },
+        { id: "✅", emoji: "✅" },
+        { id: "❌", emoji: "❌" },
+        { id: "❓", emoji: "❓" },
+        { id: "❗", emoji: "❗" },
+        { id: "💯", emoji: "💯" },
+      ],
     },
     {
       id: "shapes",
@@ -107,12 +111,23 @@ export default function ToolBar({
         </svg>
       ),
       label: "Shapes",
-      showColorPicker: true,
       shapeOptions: [
         { id: "rectangle", icon: <Square className="h-5 w-5" /> },
         { id: "circle", icon: <Circle className="h-5 w-5" /> },
         { id: "triangle", icon: <Triangle className="h-5 w-5" /> },
       ],
+    },
+    {
+      id: "color",
+      icon: (
+        <div className="flex items-center justify-center">
+          <div
+            className="h-6 w-6 rounded-full border border-white shadow-sm"
+            style={{ backgroundColor: currentColor }}
+          />
+        </div>
+      ),
+      label: "Color Picker",
     },
   ];
 
@@ -136,18 +151,6 @@ export default function ToolBar({
                       onClick={() => onToolChange(tool.id as ToolType)}
                     >
                       {tool.icon}
-                      {tool.showColorPicker && (
-                        <motion.div
-                          layoutId="active-tool-indicator"
-                          transition={{
-                            type: "spring",
-                            stiffness: 300,
-                            damping: 20,
-                          }}
-                          className="absolute -right-1 -bottom-1 h-4 w-4 rounded-full border border-white shadow-sm"
-                          style={{ backgroundColor: currentColor }}
-                        />
-                      )}
                     </Button>
                   </TooltipTrigger>
                 </PopoverTrigger>
@@ -166,7 +169,27 @@ export default function ToolBar({
                       ))}
                     </div>
                   </PopoverContent>
-                ) : tool.showColorPicker ? (
+                ) : tool.stampOptions ? (
+                  <PopoverContent className="w-auto p-2" align="center">
+                    <div className="grid grid-cols-5 gap-2">
+                      {tool.stampOptions.map((stamp) => (
+                        <Button
+                          key={stamp.id}
+                          size="icon"
+                          className="h-8 w-8 text-lg"
+                          onClick={() => {
+                            // Store the selected emoji in localStorage
+                            localStorage.setItem("selectedEmoji", stamp.emoji);
+                            // Switch to stamp tool
+                            onToolChange("stamp");
+                          }}
+                        >
+                          {stamp.emoji}
+                        </Button>
+                      ))}
+                    </div>
+                  </PopoverContent>
+                ) : tool.id === "color" ? (
                   <PopoverContent className="w-auto p-2" align="center">
                     <ColorPicker
                       color={currentColor}
