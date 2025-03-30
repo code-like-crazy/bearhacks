@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useEffect, useState } from "react";
 
 import type { ToolType } from "@/lib/types";
 
@@ -49,7 +49,33 @@ export function BoardProvider({ boardName, children }: BoardProviderProps) {
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [startDragPosition, setStartDragPosition] = useState({ x: 0, y: 0 });
-  const [currentColor, setCurrentColor] = useState("#FF9B9B");
+  const [currentColor, setCurrentColor] = useState("#60a5fa");
+
+  // Listen for zoom events from the canvas
+  useEffect(() => {
+    const handleZoom = (e: CustomEvent) => {
+      const { scale: newScale, pointer } = e.detail;
+
+      // Update scale
+      setScale(newScale);
+
+      // Adjust position to zoom toward/from the cursor position
+      // This creates a more natural zoom experience
+      if (pointer) {
+        const factor = newScale / scale;
+        const newX = pointer.x - (pointer.x - position.x) * factor;
+        const newY = pointer.y - (pointer.y - position.y) * factor;
+
+        setPosition({ x: newX, y: newY });
+      }
+    };
+
+    document.addEventListener("canvas:zoom", handleZoom as EventListener);
+
+    return () => {
+      document.removeEventListener("canvas:zoom", handleZoom as EventListener);
+    };
+  }, [scale, position]);
 
   const handleZoomIn = () => {
     setScale((prev) => Math.min(prev + 0.1, 3));

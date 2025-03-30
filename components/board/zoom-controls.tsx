@@ -10,7 +10,7 @@ export function ZoomControls() {
   const { handleZoomIn, handleZoomOut } = useBoardContext();
 
   return (
-    <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
+    <div className="absolute right-4 bottom-4 z-10 flex flex-col gap-2">
       <Button size="icon" variant="outline" onClick={handleZoomIn}>
         <ZoomIn className="h-4 w-4" />
       </Button>

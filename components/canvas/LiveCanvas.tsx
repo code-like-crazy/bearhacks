@@ -139,6 +139,49 @@ export default function LiveCanvas({
     canvas.renderAll();
   }, [canvas, scale, position]);
 
+  // Handle mouse wheel for zooming
+  useEffect(() => {
+    if (!canvas || !canvasRef.current) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      // Handle zoom with the middle mouse wheel
+      e.preventDefault();
+
+      // Get the pointer position
+      const pointer = canvas.getViewportPoint(e);
+
+      // Calculate new scale based on wheel delta
+      // Adjust the zoom sensitivity as needed
+      const delta = e.deltaY;
+      const zoomFactor = 0.05;
+      const newScale =
+        delta > 0
+          ? Math.max(0.1, scale - zoomFactor)
+          : Math.min(5, scale + zoomFactor);
+
+      // Update the board context with the new scale
+      if (setActiveTool) {
+        // We're using setActiveTool as a proxy to check if we have access to the board context
+        // This is a bit of a hack, but it works since both are passed from the same parent
+        document.dispatchEvent(
+          new CustomEvent("canvas:zoom", {
+            detail: { scale: newScale, pointer },
+          }),
+        );
+      }
+    };
+
+    canvasRef.current.addEventListener("wheel", handleWheel, {
+      passive: false,
+    });
+
+    return () => {
+      if (canvasRef.current) {
+        canvasRef.current.removeEventListener("wheel", handleWheel);
+      }
+    };
+  }, [canvas, scale, setActiveTool]);
+
   // Sync canvas objects from storage
   useEffect(() => {
     if (!canvas || !canvasObjects) return;
@@ -743,7 +786,8 @@ export default function LiveCanvas({
   return (
     <div className="relative h-full w-full overflow-hidden">
       {/* Canvas element */}
-      <div className="absolute top-4 left-4 z-50 flex gap-2">
+      <div className="absolute top-4 left-4 z-50 flex max-w-40 flex-col gap-2">
+        <p>For testing purposes (check console logs)</p>
         <button
           onClick={() => {
             console.log("Current Canvas Objects:", {
@@ -755,7 +799,7 @@ export default function LiveCanvas({
               })),
             });
           }}
-          className="rounded-xl bg-teal-500 p-4 hover:bg-teal-600"
+          className="rounded-xl bg-teal-500 p-2 hover:bg-teal-600"
         >
           Show Objects
         </button>
@@ -772,7 +816,7 @@ export default function LiveCanvas({
               });
             }
           }}
-          className="rounded-xl bg-red-500 p-4 hover:bg-red-600"
+          className="rounded-xl bg-red-500 p-2 hover:bg-red-600"
         >
           Clear All
         </button>

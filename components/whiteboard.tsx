@@ -69,7 +69,7 @@ function WhiteboardContent() {
       <div className="flex flex-1 flex-col overflow-hidden">
         <Navbar boardName={boardName} />
 
-        <div className="relative mt-16 flex max-h-[calc(100vh-150px)] flex-1 overflow-hidden">
+        <div className="relative mt-16 flex max-h-[calc(100vh-64px)] flex-1 overflow-hidden">
           <ZoomControls />
 
           <div className="relative flex-1 overflow-hidden">

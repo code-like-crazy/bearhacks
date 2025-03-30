@@ -10,7 +10,7 @@ const TestPage = () => {
   const [canvas, setCanvas] = useState<fabric.Canvas>();
   // State for canvas properties
   const [activeTool, setActiveTool] = useState<ToolType>("select");
-  const [currentColor, setCurrentColor] = useState("#FF9B9B");
+  const [currentColor, setCurrentColor] = useState("#60a5fa");
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
@@ -81,7 +81,7 @@ const TestPage = () => {
         case "s": // Sticky note tool
           setActiveTool("sticky");
           break;
-        case "+": // Zoom in
+        case "+":
         case "=":
           if (e.ctrlKey || e.metaKey) {
             e.preventDefault();
@@ -157,15 +157,14 @@ const TestPage = () => {
 
   // Available colors
   const colors = [
-    "#FF9B9B", // Light Red
-    "#FFCC9B", // Light Orange
-    "#FFFB9B", // Light Yellow
-    "#C3FF9B", // Light Green
-    "#9BFFF3", // Light Cyan
-    "#9BB5FF", // Light Blue
-    "#D89BFF", // Light Purple
-    "#FF9BE4", // Light Pink
-    "#000000", // Black
+    "#f87171", // Red
+    "#fb923c", // Orange
+    "#fde047", // Yellow
+    "#4ade80", // Green
+    "#60a5fa", // Blue
+    "#c084fc", // Purple
+    "#FFFFFF", // White
+    "#111111", // Black
   ];
 
   // Track drawing state
