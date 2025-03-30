@@ -6,4 +6,8 @@ export type ToolType =
   | "text"
   | "eraser"
   | "stamp"
-  | "shape";
+  | "shape"
+  | "rectangle"
+  | "circle"
+  | "triangle"
+  | "image";

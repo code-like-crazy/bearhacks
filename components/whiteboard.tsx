@@ -1,10 +1,15 @@
 "use client";
 
+import { useEffect } from "react";
+import { LiveMap } from "@liveblocks/client";
+import { ClientSideSuspense } from "@liveblocks/react";
+
 import { type boards } from "@/lib/db/schema";
+import { RoomProvider } from "@/lib/liveblocks.config";
 import type { ToolType } from "@/lib/types";
 
 import { ZoomControls } from "./board/zoom-controls";
-import Canvas from "./canvas";
+import LiveCanvas from "./canvas/LiveCanvas";
 import ChatPanel from "./chat-panel";
 import Navbar from "./Navbar";
 import { BoardProvider, useBoardContext } from "./providers/board-provider";
@@ -24,10 +29,21 @@ function WhiteboardContent() {
     scale,
     position,
     isDragging,
-    handleMouseDown,
-    handleMouseMove,
-    handleMouseUp,
   } = useBoardContext();
+
+  // Update cursor based on active tool
+  useEffect(() => {
+    const cursor = isDragging
+      ? "grabbing"
+      : activeTool === "select"
+        ? "grab"
+        : "default";
+    document.body.style.cursor = cursor;
+
+    return () => {
+      document.body.style.cursor = "default";
+    };
+  }, [isDragging, activeTool]);
 
   const handleToolChange = (tool: ToolType) => {
     setActiveTool(tool);
@@ -38,34 +54,37 @@ function WhiteboardContent() {
   };
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-full w-full overflow-hidden bg-black">
       <div className="flex flex-1 flex-col overflow-hidden">
         <Navbar boardName={boardName} />
 
-        <div className="relative mt-16 flex flex-1 overflow-hidden">
+        <div className="relative mt-16 flex max-h-[calc(100vh-150px)] flex-1 overflow-hidden">
           <ZoomControls />
 
-          <div
-            className="relative flex-1 cursor-grab overflow-hidden"
-            style={{
-              cursor: isDragging
-                ? "grabbing"
-                : activeTool === "select"
-                  ? "grab"
-                  : "default",
-            }}
-            onMouseDown={handleMouseDown}
-            onMouseMove={handleMouseMove}
-            onMouseUp={handleMouseUp}
-            onMouseLeave={handleMouseUp}
-          >
-            <Canvas
-              scale={scale}
-              position={position}
-              activeTool={activeTool}
-              isDragging={isDragging}
-              currentColor={currentColor}
-            />
+          <div className="relative flex-1 overflow-hidden">
+            <RoomProvider
+              id={`board-${boardName}`}
+              initialPresence={{
+                cursor: null,
+                selection: null,
+              }}
+              initialStorage={{
+                canvasObjects: new LiveMap(),
+              }}
+            >
+              <ClientSideSuspense fallback={<div>Loading...</div>}>
+                {() => (
+                  <LiveCanvas
+                    boardId={boardName}
+                    activeTool={activeTool}
+                    currentColor={currentColor}
+                    scale={scale}
+                    position={position}
+                    setActiveTool={setActiveTool}
+                  />
+                )}
+              </ClientSideSuspense>
+            </RoomProvider>
           </div>
 
           <ChatPanel />

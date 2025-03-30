@@ -6,11 +6,11 @@ type Props = {
 
 const MainLayout = (props: Props) => {
   return (
-    <div className="flex min-h-svh bg-white">
+    <div className="flex min-h-svh overflow-hidden bg-white">
       <Sidebar />
 
       {/* main content */}
-      <main className="flex h-full min-h-svh flex-1 lg:ml-72">
+      <main className="flex h-full min-h-svh flex-1 overflow-hidden lg:ml-72">
         {props.children}
       </main>
     </div>

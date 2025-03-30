@@ -4,13 +4,14 @@ import { getBoardById } from "@/services/board";
 import Whiteboard from "@/components/whiteboard";
 
 interface BoardPageProps {
-  params: {
+  params: Promise<{
     id: string;
-  };
+  }>;
 }
 
 export default async function BoardPage({ params }: BoardPageProps) {
-  const board = await getBoardById(params.id);
+  const { id } = await params;
+  const board = await getBoardById(id);
 
   if (!board) {
     notFound();
