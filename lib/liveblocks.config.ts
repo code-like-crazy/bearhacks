@@ -1,4 +1,4 @@
-import { createClient, LiveMap } from "@liveblocks/client";
+import { createClient, LiveList, LiveMap } from "@liveblocks/client";
 import { createRoomContext } from "@liveblocks/react";
 
 const client = createClient({
@@ -14,9 +14,22 @@ type Presence = {
   selection: string[] | null;
 };
 
+// Define the structure of a chat message
+export type ChatMessage = {
+  id: string;
+  text: string;
+  sender: {
+    id: string;
+    name: string;
+    imageUrl?: string;
+  };
+  createdAt: number;
+};
+
 // Storage represents the shared document that persists in the Room
 type Storage = {
   canvasObjects: LiveMap<string, any>;
+  chatMessages: LiveList<ChatMessage>;
 };
 
 // UserMeta represents static/readonly metadata on each user

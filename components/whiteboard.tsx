@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react"; // Import useState, useRef
-import { LiveMap } from "@liveblocks/client";
+import { useEffect, useRef, useState } from "react";
+import { LiveList, LiveMap } from "@liveblocks/client";
 import { ClientSideSuspense } from "@liveblocks/react";
 
 import { type boards } from "@/lib/db/schema";
@@ -19,7 +19,7 @@ interface WhiteboardProps {
   boardData: typeof boards.$inferSelect;
 }
 
-function WhiteboardContent() {
+function WhiteboardContent({ boardData }: WhiteboardProps) {
   const liveCanvasRef = useRef<LiveCanvasRef>(null); // Ref for LiveCanvas methods
   const [geminiResponse, setGeminiResponse] = useState<string | null>(null); // Add state for Gemini response
   const {
@@ -78,36 +78,36 @@ function WhiteboardContent() {
         <Navbar boardName={boardName} onGenerateClick={handleGenerateClick} />
 
         <div className="relative mt-16 flex h-[calc(100svh-64px)] flex-1 overflow-hidden">
-          <div className="relative flex-1 overflow-hidden">
-            <ZoomControls />
-            <RoomProvider
-              id={`board-${boardName}`}
-              initialPresence={{
-                cursor: null,
-                selection: null,
-              }}
-              initialStorage={{
-                canvasObjects: new LiveMap(),
-              }}
-            >
-              <ClientSideSuspense fallback={<div>Loading...</div>}>
-                {() => (
-                  <LiveCanvas
-                    ref={liveCanvasRef} // Assign the ref
-                    boardId={boardName}
-                    activeTool={activeTool}
-                    currentColor={currentColor}
-                    scale={scale}
-                    position={position}
-                    setActiveTool={setActiveTool}
-                    onGeminiResponse={setGeminiResponse} // Pass the state setter function
-                  />
-                )}
-              </ClientSideSuspense>
-            </RoomProvider>
-          </div>
-          <ChatPanel geminiResponse={geminiResponse} />{" "}
-          {/* Pass state to ChatPanel */}
+          <RoomProvider
+            id={`board-${boardData.name}`}
+            initialPresence={{
+              cursor: null,
+              selection: null,
+            }}
+            initialStorage={{
+              canvasObjects: new LiveMap(),
+              chatMessages: new LiveList([]),
+            }}
+          >
+            <ClientSideSuspense fallback={<div>Loading...</div>}>
+              {() => (
+                <>
+                  <div className="relative flex-1 overflow-hidden">
+                    <ZoomControls />
+                    <LiveCanvas
+                      boardId={boardData.name}
+                      activeTool={activeTool}
+                      currentColor={currentColor}
+                      scale={scale}
+                      position={position}
+                      setActiveTool={setActiveTool}
+                    />
+                  </div>
+                  <ChatPanel geminiResponse={geminiResponse} />
+                </>
+              )}
+            </ClientSideSuspense>
+          </RoomProvider>
         </div>
 
         <ToolBar
@@ -124,7 +124,7 @@ function WhiteboardContent() {
 export default function Whiteboard({ boardData }: WhiteboardProps) {
   return (
     <BoardProvider boardName={boardData.name}>
-      <WhiteboardContent />
+      <WhiteboardContent boardData={boardData} />
     </BoardProvider>
   );
 }
