@@ -7,6 +7,7 @@ import { ClientSideSuspense, LiveblocksProvider } from "@liveblocks/react";
 import { type boards } from "@/lib/db/schema";
 import { RoomProvider } from "@/lib/liveblocks.config";
 import type { ToolType } from "@/lib/types";
+import { Skeleton } from "@/components/ui/skeleton";
 
 import { ZoomControls } from "./board/zoom-controls";
 import LiveCanvas, { LiveCanvasRef } from "./canvas/LiveCanvas"; // Import LiveCanvasRef
@@ -84,7 +85,7 @@ function WhiteboardContent({ boardData }: WhiteboardProps) {
             }
           >
             <RoomProvider
-              id={`board-${boardData.id}`}
+              id={`my-=room`}
               initialPresence={{
                 cursor: null,
                 selection: null,
@@ -94,7 +95,56 @@ function WhiteboardContent({ boardData }: WhiteboardProps) {
                 chatMessages: new LiveList([]),
               }}
             >
-              <ClientSideSuspense fallback={<div>Loading...</div>}>
+              <ClientSideSuspense
+                fallback={
+                  <div className="flex h-full w-full flex-col">
+                    {/* Navbar skeleton */}
+                    <div className="bg-background absolute top-0 flex h-16 w-full items-center justify-between border-b px-4">
+                      <div className="flex items-center gap-2">
+                        <Skeleton className="h-8 w-8" />
+                        <Skeleton className="h-6 w-32" />
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Skeleton className="h-9 w-24" />
+                        <Skeleton className="h-9 w-9 rounded-full" />
+                      </div>
+                    </div>
+
+                    {/* Canvas area skeleton */}
+                    <div className="relative mt-16 flex h-[calc(100svh-64px)] flex-1">
+                      <div className="relative flex-1">
+                        <Skeleton className="absolute top-4 right-4 h-24 w-10 rounded-lg" />
+                        <div className="h-full w-full bg-[#F5F5F5]">
+                          {/* Loading animation dots */}
+                          <div className="flex h-full items-center justify-center">
+                            <div className="space-x-2">
+                              <span className="inline-block h-3 w-3 animate-bounce rounded-full bg-gray-400 [animation-delay:-0.3s]"></span>
+                              <span className="inline-block h-3 w-3 animate-bounce rounded-full bg-gray-400 [animation-delay:-0.15s]"></span>
+                              <span className="inline-block h-3 w-3 animate-bounce rounded-full bg-gray-400"></span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Chat panel skeleton */}
+                      <div className="bg-background w-80 border-l p-3">
+                        <div className="space-y-4">
+                          <Skeleton className="h-10 w-full" />
+                          <Skeleton className="h-20 w-full" />
+                          <Skeleton className="h-20 w-full" />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Toolbar skeleton */}
+                    <div className="bg-background absolute bottom-4 left-1/2 flex -translate-x-1/2 gap-2 rounded-lg border p-2 shadow-md">
+                      {[...Array(6)].map((_, i) => (
+                        <Skeleton key={i} className="h-10 w-10 rounded-lg" />
+                      ))}
+                    </div>
+                  </div>
+                }
+              >
                 {() => (
                   <>
                     <div className="relative flex-1 overflow-hidden">
@@ -115,14 +165,13 @@ function WhiteboardContent({ boardData }: WhiteboardProps) {
             </RoomProvider>
           </LiveblocksProvider>
         </div>
-
-        <ToolBar
-          activeTool={activeTool}
-          onToolChange={handleToolChange}
-          currentColor={currentColor}
-          onColorChange={handleColorChange}
-        />
       </div>
+      <ToolBar
+        activeTool={activeTool}
+        onToolChange={handleToolChange}
+        currentColor={currentColor}
+        onColorChange={handleColorChange}
+      />
     </div>
   );
 }

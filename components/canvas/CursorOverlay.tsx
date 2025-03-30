@@ -1,32 +1,49 @@
 "use client";
 
-import { useEffect, useState } from "react";
-
-import { useOthers } from "@/lib/liveblocks.config";
+import { useMyPresence } from "@liveblocks/react";
 
 import { CursorOverlayProps } from "./types";
 
+const COLORS = [
+  "#E57373",
+  "#9575CD",
+  "#4FC3F7",
+  "#81C784",
+  "#FFF176",
+  "#FF8A65",
+  "#F06292",
+  "#7986CB",
+];
+
 export function CursorOverlay({ others }: CursorOverlayProps) {
-  // Add a state to force re-renders
-  const [, setForceUpdate] = useState(0);
-
-  // Force re-render every 100ms to ensure cursors are updated
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      setForceUpdate((prev) => prev + 1);
-    }, 100);
-
-    return () => clearInterval(intervalId);
-  }, []);
+  const [{ cursor }, updateMyPresence] = useMyPresence();
 
   return (
-    <>
+    <div
+      className="pointer-events-auto absolute inset-0 z-0"
+      onPointerMove={(event) => {
+        event.preventDefault();
+        // Update the cursor position on every pointer move
+        updateMyPresence({
+          cursor: {
+            x: Math.round(event.clientX),
+            y: Math.round(event.clientY),
+          },
+        });
+      }}
+      onPointerLeave={() => {
+        // When the pointer leaves, set cursor to null
+        updateMyPresence({
+          cursor: null,
+        });
+      }}
+    >
+      {/* Show other users' cursors */}
       {others.map((user) => {
-        if (!user.presence.cursor) return null;
+        if (!user.presence?.cursor) return null;
 
         // Extract user info from selection field if available
         let userName = `User ${user.connectionId}`;
-
         if (user.presence.selection && user.presence.selection.length > 0) {
           const userInfoString = user.presence.selection[0];
           if (
@@ -36,7 +53,7 @@ export function CursorOverlay({ others }: CursorOverlayProps) {
           ) {
             const parts = userInfoString.split(":");
             if (parts.length >= 3) {
-              userName = parts[2]; // Get the name part
+              userName = parts[2];
             }
           }
         }
@@ -59,7 +76,7 @@ export function CursorOverlay({ others }: CursorOverlayProps) {
               fill="none"
               xmlns="http://www.w3.org/2000/svg"
               style={{
-                color: `hsl(${user.connectionId * 40}, 100%, 50%)`,
+                color: COLORS[user.connectionId % COLORS.length],
               }}
             >
               <path
@@ -74,7 +91,7 @@ export function CursorOverlay({ others }: CursorOverlayProps) {
             <div
               className="absolute top-5 left-5 rounded-md px-2 py-1 text-xs whitespace-nowrap text-white"
               style={{
-                backgroundColor: `hsl(${user.connectionId * 40}, 100%, 50%)`,
+                backgroundColor: COLORS[user.connectionId % COLORS.length],
               }}
             >
               {userName}
@@ -82,6 +99,6 @@ export function CursorOverlay({ others }: CursorOverlayProps) {
           </div>
         );
       })}
-    </>
+    </div>
   );
 }

@@ -16,6 +16,7 @@ import { nanoid } from "nanoid";
 import { useMutation, useOthers, useStorage } from "@/lib/liveblocks.config";
 import { CursorOverlay } from "@/components/canvas/CursorOverlay";
 
+import { Button } from "../ui/button";
 // Removed direct import of generateTripPlan
 
 import { LiveCanvasProps } from "./types";
@@ -45,6 +46,7 @@ const LiveCanvas = forwardRef<LiveCanvasRef, LiveCanvasProps>(
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [canvas, setCanvas] = useState<fabric.Canvas>();
     const [isDown, setIsDown] = useState(false);
+    const [showCursors, setShowCursors] = useState(false);
     const [startPoint, setStartPoint] = useState<{
       x: number;
       y: number;
@@ -999,6 +1001,14 @@ const LiveCanvas = forwardRef<LiveCanvasRef, LiveCanvasProps>(
       <div className="relative h-full w-full overflow-hidden">
         {/* Canvas element */}
         <div className="absolute top-4 left-4 z-50 flex max-w-40 flex-col gap-2">
+          <Button
+            variant={"secondary"}
+            size={"sm"}
+            onClick={() => setShowCursors(!showCursors)}
+          >
+            {showCursors ? "Hide Cursors" : "Show Cursors"}
+          </Button>
+
           <p>For testing purposes (check console logs)</p>
           <button
             onClick={() => {
@@ -1038,7 +1048,7 @@ const LiveCanvas = forwardRef<LiveCanvasRef, LiveCanvasProps>(
         <canvas
           ref={canvasRef}
           id="canvas"
-          className="absolute top-0 left-0 h-full max-h-full w-full max-w-full"
+          className="pointer-events-auto absolute top-0 left-0 h-full max-h-full w-full max-w-full"
         />
 
         {/* Hidden file input for image upload */}
@@ -1051,7 +1061,7 @@ const LiveCanvas = forwardRef<LiveCanvasRef, LiveCanvasProps>(
         />
 
         {/* Cursor overlay component */}
-        <CursorOverlay others={others} />
+        {showCursors && <CursorOverlay others={others} />}
       </div>
     );
   },

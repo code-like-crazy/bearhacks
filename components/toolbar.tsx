@@ -139,7 +139,7 @@ export default function ToolBar({
 
   return (
     <TooltipProvider>
-      <div className="fixed inset-x-0 bottom-0 pb-4">
+      <div className="fixed inset-x-0 bottom-0 z-50 pb-4">
         <motion.div
           initial={{ y: -50, opacity: 0, scale: 0.8 }}
           animate={{ y: 0, opacity: 1, scale: 1 }}

@@ -1,3 +1,5 @@
+import { User as LiveblocksUser } from "@liveblocks/client";
+import type { User } from "@liveblocks/client";
 import type {
   ActiveSelection,
   Canvas,
@@ -115,6 +117,12 @@ export interface CursorData {
   y: number;
 }
 
+export interface Presence {
+  cursor: CursorPosition | null;
+  selection: string[] | null;
+  [key: string]: any;
+}
+
 export interface CursorOverlayProps {
-  others: ReadonlyArray<any>;
+  others: ReadonlyArray<User<Presence, any>>;
 }

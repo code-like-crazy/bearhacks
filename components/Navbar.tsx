@@ -23,7 +23,7 @@ const Navbar = ({
   ],
 }: NavbarProps) => {
   return (
-    <nav className="fixed z-50 flex h-16 items-center justify-between overflow-x-hidden border-b bg-white px-4 lg:w-[calc(100%-288px)]">
+    <nav className="fixed z-50 flex h-16 w-full items-center justify-between overflow-x-hidden border-b bg-white px-4 lg:w-[calc(100%-288px)]">
       {/* Left Section: Board Name */}
       <button className="group flex cursor-pointer items-center gap-2 border-b text-lg font-semibold transition-colors hover:border-zinc-600">
         <p>{boardName}</p>
