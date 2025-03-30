@@ -28,7 +28,11 @@ const JoinBoardModal = ({ trigger }: JoinBoardModalProps) => {
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        {trigger || <Button variant="secondary">Join Board</Button>}
+        {trigger || (
+          <Button variant="secondary" className="xl:text-base">
+            Join Board
+          </Button>
+        )}
       </DialogTrigger>
 
       <DialogContent className="sm:max-w-md">

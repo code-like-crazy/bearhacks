@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 
 import CreateBoardModal from "../modals/CreateBoardModal";
 import JoinBoardModal from "../modals/JoinBoardModal";
+import RecentBoards from "./RecentBoards";
 import SidebarUser from "./SidebarUser";
 
 const Sidebar = ({ className }: { className?: string }) => {
@@ -32,7 +33,7 @@ const Sidebar = ({ className }: { className?: string }) => {
           {/* List of boards */}
           <div className="text-muted-foreground space-y-2 text-sm font-semibold">
             <p>Recent boards</p>
-            <div className="flex flex-col gap-2"></div>
+            <RecentBoards />
           </div>
         </div>
 

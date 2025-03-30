@@ -14,7 +14,7 @@ const SignOutButton = ({ className }: { className?: string }) => {
         })
       }
       className={cn(
-        "flex w-full items-center justify-center gap-2 rounded-md bg-red-500/10 px-3 py-2 text-sm text-red-500 transition hover:bg-red-500/20",
+        "flex w-full cursor-pointer items-center justify-center gap-2 rounded-md bg-red-500/10 px-3 py-2 text-sm text-red-500 transition hover:bg-red-500/20",
         className,
       )}
     >
