@@ -13,7 +13,7 @@ export const createBoardSchema = z.object({
     .max(20, "Invite code must be less than 20 characters")
     .optional()
     .transform((e) => (e === "" ? undefined : e)),
-  selectedImage: z.string().min(1, "Board image is required"),
+  selectedImage: z.string(),
 });
 
 export type CreateBoardRequest = z.infer<typeof createBoardSchema>;
