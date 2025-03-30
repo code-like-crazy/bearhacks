@@ -1,11 +1,12 @@
 "use client";
 
 import type React from "react";
-import { useState, useEffect, useRef } from "react"; // Import useRef
+import { useEffect, useRef, useState } from "react"; // Import useRef
 import { Send } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+
 // Removed duplicate useEffect import
 
 interface ChatMessage {
@@ -63,7 +64,7 @@ export default function ChatPanel({ geminiResponse }: ChatPanelProps) {
   };
 
   return (
-    <div className="bg-background flex w-72 flex-col border-l">
+    <div className="z-30 flex w-72 flex-col border-l border-l-gray-200 bg-gray-50">
       <div className="border-b p-3">
         <h3 className="font-medium">Chat</h3>
       </div>

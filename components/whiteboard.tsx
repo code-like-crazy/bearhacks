@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react"; // Import useState, useRef
+import { useEffect, useRef, useState } from "react"; // Import useState, useRef
 import { LiveMap } from "@liveblocks/client";
 import { ClientSideSuspense } from "@liveblocks/react";
 
@@ -77,10 +77,9 @@ function WhiteboardContent() {
         {/* Pass handleGenerateClick to Navbar */}
         <Navbar boardName={boardName} onGenerateClick={handleGenerateClick} />
 
-        <div className="relative mt-16 flex max-h-[calc(100vh-64px)] flex-1 overflow-hidden">
-          <ZoomControls />
-
+        <div className="relative mt-16 flex h-[calc(100svh-64px)] flex-1 overflow-hidden">
           <div className="relative flex-1 overflow-hidden">
+            <ZoomControls />
             <RoomProvider
               id={`board-${boardName}`}
               initialPresence={{
@@ -107,8 +106,8 @@ function WhiteboardContent() {
               </ClientSideSuspense>
             </RoomProvider>
           </div>
-
-          <ChatPanel geminiResponse={geminiResponse} /> {/* Pass state to ChatPanel */}
+          <ChatPanel geminiResponse={geminiResponse} />{" "}
+          {/* Pass state to ChatPanel */}
         </div>
 
         <ToolBar
