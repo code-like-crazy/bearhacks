@@ -5,7 +5,8 @@ import {
   HarmCategory,
   HarmBlockThreshold,
   Part, // Import Part for response checking
-  GenerateContentResponse // Import for response type
+  GenerateContentResponse, // Import for response type
+  SchemaType
 } from "@google/generative-ai";
 import { SelectAiOutput } from "@/lib/db/schema"; // For potential return type hinting
 
@@ -55,12 +56,12 @@ const searchFlightsFunction: FunctionDeclaration = {
   description: "Searches for flight options based on destination, dates, and budget.",
   parameters: {
     properties: {
-      destination: { type: "string" as const, description: "City and country of destination (e.g., Tokyo, Japan)" },
-      departureDate: { type: "string" as const, description: "Departure date in YYYY-MM-DD format" },
-      returnDate: { type: "string" as const, description: "Return date in YYYY-MM-DD format" },
-      maxPrice: { type: "number" as const, description: "Maximum budget for the round-trip flight per person (optional)" },
+      destination: { type: SchemaType.STRING, description: "City and country of destination (e.g., Tokyo, Japan)" },
+      departureDate: { type: SchemaType.STRING, description: "Departure date in YYYY-MM-DD format" },
+      returnDate: { type: SchemaType.STRING, description: "Return date in YYYY-MM-DD format" },
+      maxPrice: { type: SchemaType.NUMBER, description: "Maximum budget for the round-trip flight per person (optional)" },
     },
-    type: "OBJECT" as const,
+    type: SchemaType.OBJECT,
     required: ["destination", "departureDate", "returnDate"]
   }
 };
@@ -70,14 +71,14 @@ const searchHotelsFunction: FunctionDeclaration = {
   description: "Searches for hotel options based on destination, dates, and preferences.",
   parameters: {
     properties: {
-      destination: { type: "string", description: "City and country of destination (e.g., Tokyo, Japan)" },
-      checkInDate: { type: "string", description: "Check-in date in YYYY-MM-DD format" },
-      checkOutDate: { type: "string", description: "Check-out date in YYYY-MM-DD format" },
-      numberOfGuests: { type: "number", description: "Number of guests staying (default 1)" },
-      maxPricePerNight: { type: "number", description: "Maximum budget per night for the hotel room (optional)" },
-      minRating: { type: "number", description: "Minimum desired hotel rating (e.g., 4 for 4-star and above) (optional)" },
+      destination: { type: SchemaType.STRING, description: "City and country of destination (e.g., Tokyo, Japan)" },
+      checkInDate: { type: SchemaType.STRING, description: "Check-in date in YYYY-MM-DD format" },
+      checkOutDate: { type: SchemaType.STRING, description: "Check-out date in YYYY-MM-DD format" },
+      numberOfGuests: { type: SchemaType.NUMBER, description: "Number of guests staying (default 1)" },
+      maxPricePerNight: { type: SchemaType.NUMBER, description: "Maximum budget per night for the hotel room (optional)" },
+      minRating: { type: SchemaType.NUMBER, description: "Minimum desired hotel rating (e.g., 4 for 4-star and above) (optional)" },
     },
-    type: "OBJECT",
+    type: SchemaType.OBJECT,
     required: ["destination", "checkInDate", "checkOutDate"]
   }
 };
@@ -87,9 +88,10 @@ const generateDestinationImageFunction: FunctionDeclaration = {
   description: "Generates a visually appealing image representing the travel destination.",
   parameters: {
     properties: {
-      destinationDescription: { description: "A brief description or keywords for the image generation model (e.g., 'Vibrant Shibuya Crossing at night, Tokyo', 'Relaxing beach scene in Bali')" },
+      destinationDescription: { type: SchemaType.STRING, description: "A brief description or keywords for the image generation model (e.g., 'Vibrant Shibuya Crossing at night, Tokyo', 'Relaxing beach scene in Bali')" },
     },
-    required: ["destinationDescription"]
+    required: ["destinationDescription"],
+    type: SchemaType.STRING
   }
 };
 
