@@ -38,7 +38,7 @@ export default function RecentBoards() {
   const fetchBoards = useCallback(async () => {
     setLoading(true);
     const { boards, error } = await getRecentBoards();
-    // setBoards(boards);
+    setBoards(boards);
     setError(error);
     setLoading(false);
   }, []);

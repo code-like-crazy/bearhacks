@@ -3,19 +3,23 @@ import { Edit2, Sparkles } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 
-type Props = {
-  boardName?: string; // Make boardName optional or provide a default
-  activeUsers?: { src: string; fallback: string }[]; // Array of user avatars
-};
+interface NavbarProps {
+  boardName: string;
+  collaborators?: {
+    id: number;
+    name: string;
+    image: string;
+  }[];
+}
 
 const Navbar = ({
-  boardName = "Board_Name",
-  activeUsers = [
-    { src: "/avatars/cat.jpg", fallback: "U1" },
-    { src: "/avatars/dog.jpg", fallback: "U2" },
-    { src: "/avatars/cat2.jpg", fallback: "U3" },
+  boardName,
+  collaborators = [
+    { id: 1, name: "Alex", image: "/avatars/cat.jpg" },
+    { id: 2, name: "Jamie", image: "/avatars/dog.jpg" },
+    { id: 3, name: "Taylor", image: "/avatars/cat2.jpg" },
   ],
-}: Props) => {
+}: NavbarProps) => {
   return (
     <nav className="fixed z-50 flex h-16 items-center justify-between overflow-x-hidden border-b bg-white px-4 lg:w-[calc(100%-288px)]">
       {/* Left Section: Board Name */}
@@ -25,12 +29,11 @@ const Navbar = ({
       </button>
 
       <div className="flex items-center gap-4 md:gap-8">
-        {/* active users */}
         <div className="flex items-center gap-2">
-          {activeUsers.map((user, index) => (
-            <Avatar key={index} className="size-8 border-2 border-rose-400">
-              <AvatarImage src={user.src} />
-              <AvatarFallback>{user.fallback}</AvatarFallback>
+          {collaborators.map((user) => (
+            <Avatar key={user.id} className="size-8 border-2 border-rose-400">
+              <AvatarImage src={user.image} />
+              <AvatarFallback>{user.name.charAt(0)}</AvatarFallback>
             </Avatar>
           ))}
         </div>
