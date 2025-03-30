@@ -1,22 +1,31 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState, forwardRef, useImperativeHandle, ForwardedRef } from "react"; // Added ForwardedRef
 import * as fabric from "fabric";
+// Removed duplicate imports
 import { nanoid } from "nanoid";
 
 import { useMutation, useOthers, useStorage } from "@/lib/liveblocks.config";
 import { CursorOverlay } from "@/components/canvas/CursorOverlay";
+// Removed direct import of generateTripPlan
 
 import { LiveCanvasProps } from "./types";
 
-export default function LiveCanvas({
+// Define the type for the exposed methods
+export interface LiveCanvasRef {
+  triggerGeneration: () => void;
+}
+
+// Use forwardRef to allow parent component to call methods inside LiveCanvas
+const LiveCanvas = forwardRef<LiveCanvasRef, LiveCanvasProps>(({
   boardId,
   activeTool,
   currentColor,
   scale = 1,
   position = { x: 0, y: 0 },
   setActiveTool,
-}: LiveCanvasProps) {
+  onGeminiResponse, // Add the callback prop
+}: LiveCanvasProps, ref: ForwardedRef<LiveCanvasRef>) => { // Correctly typed ref
   // Refs
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -33,6 +42,71 @@ export default function LiveCanvas({
   // Get canvas objects from Liveblocks storage
   const canvasObjects = useStorage((root) => root.canvasObjects);
 
+  // --- Generation Logic ---
+  const triggerGenerationApiCall = async () => {
+    if (!boardId) {
+      onGeminiResponse?.("Board ID is missing.");
+      return;
+    }
+
+    onGeminiResponse?.("Generating trip plan..."); // Indicate loading state
+
+    try {
+      const response = await fetch(`/api/boards/${boardId}/generate`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        // No body needed as the API route fetches data based on boardId
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        // Handle errors from the API (like "All members must lock in", "No text content", etc.)
+        console.error("API Error:", result.message || response.statusText);
+        onGeminiResponse?.(`Error: ${result.message || response.statusText}`);
+        return;
+      }
+
+      console.log("API Response:", result);
+
+      // Process the successful response data (result.data contains the aiOutput)
+      const aiOutput = result.data;
+      let responseText = "Could not generate a plan."; // Default message
+
+      if (aiOutput?.destinationSummary) {
+        try {
+          const summary = JSON.parse(aiOutput.destinationSummary);
+          responseText = `Suggested Destination: ${summary.place}.\nReason: ${summary.reason}`;
+          // Optionally append flight/hotel info if needed for the chat
+          // if (aiOutput.vendorOptions?.flights?.length) { ... }
+          // if (aiOutput.vendorOptions?.hotels?.length) { ... }
+        } catch (e) {
+          console.error("Failed to parse destination summary", e);
+          // Fallback if parsing fails but summary exists
+          responseText = `Summary: ${aiOutput.destinationSummary}`;
+        }
+      } else if (aiOutput?.destination) {
+        responseText = `Suggested Destination: ${aiOutput.destination}`;
+      } else if (result.message) {
+         // Use the message from the API if no specific data is found
+         responseText = result.message;
+      }
+
+      onGeminiResponse?.(responseText); // Send the processed result back up
+
+    } catch (error) {
+      console.error("Error calling generation API:", error);
+      onGeminiResponse?.(`Error generating trip plan: ${error instanceof Error ? error.message : 'Network error or invalid response'}`);
+    }
+  };
+
+  // Expose the API call function via ref
+  useImperativeHandle(ref, () => ({
+    triggerGeneration: triggerGenerationApiCall,
+  }));
+
   // Mutations for updating storage
   const syncObjectToStorage = useMutation(({ storage }, object) => {
     if (!object) return;
@@ -46,14 +120,80 @@ export default function LiveCanvas({
     const objectData = object.toJSON();
     objectData.objectId = objectId;
 
+    // Save to Liveblocks storage
     const canvasObjects = storage.get("canvasObjects");
     canvasObjects.set(objectId, objectData);
-  }, []);
+
+    // Save text content to database if it's a text or sticky note
+    if (boardId && (object.type === 'textbox' || object.type === 'i-text' || (object as any).stickyId)) {
+      let textContent = '';
+      
+      // Handle different types of text content
+      if (object.type === 'textbox' || object.type === 'i-text') {
+        textContent = (object as any).text || '';
+      } else if ((object as any).stickyId) {
+        // For sticky notes, include any additional context
+        const isMainText = (object as any).objectId?.includes('-text');
+        if (isMainText) {
+          textContent = (object as any).text || '';
+        }
+      }
+
+      if (textContent.trim()) {
+        console.log(`Saving text content for element ${objectId}:`, {
+          type: (object as any).stickyId ? 'sticky' : 'text',
+          content: textContent,
+        });
+
+        fetch(`/api/boards/${boardId}/elements`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            id: objectId,
+            type: (object as any).stickyId ? 'sticky' : 'text',
+            data: textContent,
+            x: object.left || 0,
+            y: object.top || 0
+          }),
+        }).catch(error => {
+          console.error("Error saving element:", error);
+        });
+      }
+    }
+  }, [boardId]);
 
   const deleteObjectFromStorage = useMutation(({ storage }, objectId) => {
+    console.log(`Deleting object ${objectId} from storage...`);
+    
+    // Remove from Liveblocks storage
     const canvasObjects = storage.get("canvasObjects");
     canvasObjects.delete(objectId);
-  }, []);
+
+    // Delete from database if boardId exists
+    if (boardId) {
+      console.log(`Deleting element ${objectId} from board ${boardId}...`);
+      fetch(`/api/boards/${boardId}/elements`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id: objectId }),
+      })
+      .then(response => {
+        if (!response.ok) {
+          return response.text().then(text => {
+            console.error(`Failed to delete element ${objectId}:`, text);
+          });
+        }
+        console.log(`Successfully deleted element ${objectId}`);
+      })
+      .catch(error => {
+        console.error(`Error deleting element ${objectId}:`, error);
+      });
+    }
+  }, [boardId]);
 
   // Initialize canvas
   useEffect(() => {
@@ -180,7 +320,7 @@ export default function LiveCanvas({
         canvasRef.current.removeEventListener("wheel", handleWheel);
       }
     };
-  }, [canvas, scale, setActiveTool]);
+  }, [canvas, scale, setActiveTool]); // Removed onZoomChange as it's handled via CustomEvent now
 
   // Sync canvas objects from storage
   useEffect(() => {
@@ -551,17 +691,53 @@ export default function LiveCanvas({
         obj.selectable = true;
       });
 
-      // Add event listener for object modified
+      // Add event listeners for object and text modifications
       const handleObjectModified = (e: any) => {
+        if (e.target) {
+          console.log('Object modified:', {
+            type: e.target.type,
+            text: e.target.text,
+            id: e.target.objectId
+          });
+          syncObjectToStorage(e.target);
+        }
+      };
+
+      const handleTextModified = (e: any) => {
+        console.log('Text changed:', {
+          type: e.target.type,
+          text: e.target.text,
+          id: e.target.objectId
+        });
+        if (e.target && (e.target.type === 'textbox' || e.target.type === 'i-text')) {
+          // Ensure immediate storage update for text changes
+          syncObjectToStorage(e.target);
+        }
+      };
+
+      const handleTextEditing = (e: any) => {
+        // Log when text editing starts
+        console.log('Started editing text:', e.target.text);
+      };
+
+      const handleTextEditingExited = (e: any) => {
+        // When text editing ends, ensure content is saved
+        console.log('Finished editing text:', e.target.text);
         if (e.target) {
           syncObjectToStorage(e.target);
         }
       };
 
       canvas.on("object:modified", handleObjectModified);
+      canvas.on("text:changed", handleTextModified);
+      canvas.on("text:editing:entered", handleTextEditing);
+      canvas.on("text:editing:exited", handleTextEditingExited);
 
       return () => {
         canvas.off("object:modified", handleObjectModified);
+        canvas.off("text:changed", handleTextModified);
+        canvas.off("text:editing:entered", handleTextEditing);
+        canvas.off("text:editing:exited", handleTextEditingExited);
       };
     } else if (activeTool === "grab") {
       // Enable canvas dragging but disable object selection
@@ -840,4 +1016,8 @@ export default function LiveCanvas({
       <CursorOverlay others={others} />
     </div>
   );
-}
+});
+
+LiveCanvas.displayName = "LiveCanvas"; // Add display name for DevTools
+
+export default LiveCanvas;

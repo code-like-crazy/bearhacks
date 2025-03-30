@@ -6,6 +6,7 @@ import { Camera, Trash2, Upload } from "lucide-react"; // Added Camera and Uploa
 
 import type { ToolType } from "@/lib/types";
 import { Popover, PopoverContent } from "@/components/ui/popover"; // Import Popover
+import { generateTripPlan } from "@/services/geminiService";
 
 import DrawingCanvas from "./elements/drawing-canvas";
 import ImageElement from "./elements/image-element";
@@ -20,6 +21,7 @@ interface CanvasProps {
   activeTool: ToolType;
   isDragging: boolean; // This prop might indicate panning/zooming, separate from element dragging
   currentColor: string;
+  onGeminiResponse: (response: string) => void; // Add prop to pass response up
 }
 
 export interface CanvasElement {
@@ -38,6 +40,7 @@ export default function Canvas({
   activeTool,
   isDragging,
   currentColor,
+  onGeminiResponse, // Destructure the new prop
 }: CanvasProps) {
   const [elements, setElements] = useState<CanvasElement[]>([
     {
@@ -129,6 +132,32 @@ export default function Canvas({
     },
     [scale, position.x, position.y],
   );
+
+  const generateTripPlanFromCanvas = async () => {
+    const textContent = elements
+      .map((element) => {
+        if (element.type === "sticky" && element.content && element.content.text) {
+          return element.content.text;
+        } else if (element.type === "text" && element.content && element.content.text) {
+          return element.content.text;
+        }
+        return "";
+      })
+      .join("\n");
+
+    console.log("Canvas Content:", textContent);
+
+    try {
+      const tripPlan = await generateTripPlan(textContent);
+      console.log("Trip Plan:", tripPlan);
+      // Extract the text response from the trip plan (adjust based on actual structure)
+      const responseText = tripPlan.destinationSummary ? JSON.parse(tripPlan.destinationSummary).reason : "Could not generate a plan.";
+      onGeminiResponse(responseText); // Call the callback prop
+    } catch (error) {
+      console.error("Error generating trip plan:", error);
+      onGeminiResponse("Error generating trip plan."); // Send error message up
+    }
+  };
 
   // --- Add Element Functions (defined before use in handlePointerUp) ---
   const addStickyNote = useCallback(
@@ -595,6 +624,7 @@ export default function Canvas({
       onPointerUp={handlePointerUp} // Pass the memoized handler directly
       onPointerLeave={handlePointerUp} // Treat leaving the area as pointer up
     >
+      <button onClick={generateTripPlanFromCanvas}>Generate Trip Plan</button>
       {/* Image Choice Popover */}
       <Popover
         open={showImageChoiceDialog}

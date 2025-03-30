@@ -1,21 +1,56 @@
 "use client";
 
 import type React from "react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react"; // Import useRef
 import { Send } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+// Removed duplicate useEffect import
 
-export default function ChatPanel() {
+interface ChatMessage {
+  text: string;
+  sender: string;
+}
+
+interface ChatPanelProps {
+  geminiResponse: string | null;
+}
+
+export default function ChatPanel({ geminiResponse }: ChatPanelProps) {
   const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState<{ text: string; sender: string }[]>(
-    [],
-  );
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const messagesEndRef = useRef<HTMLDivElement>(null); // Ref for the end of messages
 
+  // Add Gemini's response to the chat when it changes
+  useEffect(() => {
+    if (geminiResponse) {
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        { text: geminiResponse, sender: "gemini" },
+      ]);
+    }
+  }, [geminiResponse]);
+
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const addGeminiMessage = (text: string) => {
+    setMessages((prevMessages) => [
+      ...prevMessages,
+      { text: text, sender: "gemini" },
+    ]);
+  };
+
+  // Function to add a new message to the chat
   const handleSendMessage = () => {
     if (message.trim()) {
-      setMessages([...messages, { text: message, sender: "user" }]);
+      setMessages((prevMessages) => [
+        ...prevMessages,
+        { text: message, sender: "user" },
+      ]);
       setMessage("");
     }
   };
@@ -54,6 +89,8 @@ export default function ChatPanel() {
                 </div>
               </div>
             ))}
+            {/* Empty div to scroll to */}
+            <div ref={messagesEndRef} />
           </div>
         )}
       </div>

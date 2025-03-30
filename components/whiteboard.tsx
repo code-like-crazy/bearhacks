@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState, useRef } from "react"; // Import useState, useRef
 import { LiveMap } from "@liveblocks/client";
 import { ClientSideSuspense } from "@liveblocks/react";
 
@@ -9,7 +9,7 @@ import { RoomProvider } from "@/lib/liveblocks.config";
 import type { ToolType } from "@/lib/types";
 
 import { ZoomControls } from "./board/zoom-controls";
-import LiveCanvas from "./canvas/LiveCanvas";
+import LiveCanvas, { LiveCanvasRef } from "./canvas/LiveCanvas"; // Import LiveCanvasRef
 import ChatPanel from "./chat-panel";
 import Navbar from "./Navbar";
 import { BoardProvider, useBoardContext } from "./providers/board-provider";
@@ -20,6 +20,8 @@ interface WhiteboardProps {
 }
 
 function WhiteboardContent() {
+  const liveCanvasRef = useRef<LiveCanvasRef>(null); // Ref for LiveCanvas methods
+  const [geminiResponse, setGeminiResponse] = useState<string | null>(null); // Add state for Gemini response
   const {
     boardName,
     activeTool,
@@ -64,10 +66,16 @@ function WhiteboardContent() {
     setActiveTool("select");
   };
 
+  // Function to trigger generation in LiveCanvas
+  const handleGenerateClick = () => {
+    liveCanvasRef.current?.triggerGeneration();
+  };
+
   return (
     <div className="flex h-full w-full overflow-hidden bg-[#F5F5F5]">
       <div className="flex flex-1 flex-col overflow-hidden">
-        <Navbar boardName={boardName} />
+        {/* Pass handleGenerateClick to Navbar */}
+        <Navbar boardName={boardName} onGenerateClick={handleGenerateClick} />
 
         <div className="relative mt-16 flex max-h-[calc(100vh-64px)] flex-1 overflow-hidden">
           <ZoomControls />
@@ -86,19 +94,21 @@ function WhiteboardContent() {
               <ClientSideSuspense fallback={<div>Loading...</div>}>
                 {() => (
                   <LiveCanvas
+                    ref={liveCanvasRef} // Assign the ref
                     boardId={boardName}
                     activeTool={activeTool}
                     currentColor={currentColor}
                     scale={scale}
                     position={position}
                     setActiveTool={setActiveTool}
+                    onGeminiResponse={setGeminiResponse} // Pass the state setter function
                   />
                 )}
               </ClientSideSuspense>
             </RoomProvider>
           </div>
 
-          <ChatPanel />
+          <ChatPanel geminiResponse={geminiResponse} /> {/* Pass state to ChatPanel */}
         </div>
 
         <ToolBar

@@ -1,29 +1,27 @@
 import {
   FunctionCall,
   FunctionDeclaration,
-  GenerateContentResponse, // Import for response type
+  GenerateContentResponse,
   GoogleGenerativeAI,
   HarmBlockThreshold,
   HarmCategory,
-  Part, // Import Part for response checking
+  Part,
   SchemaType,
 } from "@google/generative-ai";
 import axios from "axios";
+import { SelectAiOutput } from "@/lib/db/schema";
 
-import { SelectAiOutput } from "@/lib/db/schema"; // For potential return type hinting
-
-// --- Configuration ---
-const API_KEY = process.env.GEMINI_API_KEY;
+const API_KEY = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
 
 if (!API_KEY) {
-  throw new Error("GEMINI_API_KEY environment variable is not set.");
+  throw new Error("NEXT_PUBLIC_GEMINI_API_KEY environment variable is not set.");
 }
 
 const genAI = new GoogleGenerativeAI(API_KEY);
 
 const generationConfig = {
-  temperature: 0.9, // Adjust creativity vs. factuality
-  topP: 1, // Adjust the probability threshold for token selection
+  temperature: 0.9,
+  topP: 1,
 };
 
 const safetySettings = [
@@ -46,18 +44,14 @@ const safetySettings = [
 ];
 
 const model = genAI.getGenerativeModel({
-  model: "gemini-2.0-flash", // Using flash as requested
+  model: "gemini-2.0-flash",
   safetySettings,
   generationConfig,
 });
 
-// --- Function Declarations ---
-
-// Use the potentially resolved SchemaType constant
 const searchFlightsFunction: FunctionDeclaration = {
   name: "searchFlights",
-  description:
-    "Searches for flight options based on destination, dates, and budget.",
+  description: "Searches for flight options based on destination, dates, and budget.",
   parameters: {
     properties: {
       destination: {
@@ -74,8 +68,7 @@ const searchFlightsFunction: FunctionDeclaration = {
       },
       maxPrice: {
         type: SchemaType.NUMBER,
-        description:
-          "Maximum budget for the round-trip flight per person (optional)",
+        description: "Maximum budget for the round-trip flight per person (optional)",
       },
     },
     type: SchemaType.OBJECT,
@@ -85,8 +78,7 @@ const searchFlightsFunction: FunctionDeclaration = {
 
 const searchHotelsFunction: FunctionDeclaration = {
   name: "searchHotels",
-  description:
-    "Searches for hotel options based on destination, dates, and preferences.",
+  description: "Searches for hotel options based on destination, dates, and preferences.",
   parameters: {
     properties: {
       destination: {
@@ -111,8 +103,7 @@ const searchHotelsFunction: FunctionDeclaration = {
       },
       minRating: {
         type: SchemaType.NUMBER,
-        description:
-          "Minimum desired hotel rating (e.g., 4 for 4-star and above) (optional)",
+        description: "Minimum desired hotel rating (e.g., 4 for 4-star and above) (optional)",
       },
     },
     type: SchemaType.OBJECT,
@@ -122,14 +113,12 @@ const searchHotelsFunction: FunctionDeclaration = {
 
 const generateDestinationImageFunction: FunctionDeclaration = {
   name: "generateDestinationImage",
-  description:
-    "Generates a visually appealing image representing the travel destination.",
+  description: "Generates a visually appealing image representing the travel destination.",
   parameters: {
     properties: {
       destinationDescription: {
         type: SchemaType.STRING,
-        description:
-          "A brief description or keywords for the image generation model (e.g., 'Vibrant Shibuya Crossing at night, Tokyo', 'Relaxing beach scene in Bali')",
+        description: "A brief description or keywords for the image generation model",
       },
     },
     required: ["destinationDescription"],
@@ -143,322 +132,245 @@ const functionDeclarations = [
   generateDestinationImageFunction,
 ];
 
-// --- Main Service Function ---
-
-// Placeholder types for external API responses
 type FlightResult = {
   id: string;
   airline: string;
   price: number;
-  departure: string /* ... */;
+  departure: string;
 };
+
 type HotelResult = {
   id: string;
   name: string;
   pricePerNight: number;
-  rating?: number /* ... */;
+  rating?: number;
 };
-type ImageResult = { imageUrl: string };
 
-// Placeholder functions for calling external APIs
+type ImageResult = { 
+  imageUrl: string 
+};
 
-const TRAVEL_ADVISOR_API_KEY =
-  "a462edae62msh505ff93a62af7b0p15813ajsn41b41771d1e9"; // Replace with your actual Travel Advisor API key
-const BOOKING_COM_API_KEY =
-  "a462edae62msh505ff93a62af7b0p15813ajsn41b41771d1e9"; // Replace with your actual Booking.com API key
+const TRAVEL_ADVISOR_API_KEY = "a462edae62msh505ff93a62af7b0p15813ajsn41b41771d1e9";
+const BOOKING_COM_API_KEY = "a462edae62msh505ff93a62af7b0p15813ajsn41b41771d1e9";
 
 async function callFlightSearchAPI(args: any): Promise<FlightResult[]> {
-  console.log("--- Calling Travel Advisor API ---", args);
-  // Replace with actual API call to Travel Advisor
+  console.log("Searching flights for:", args);
   try {
-    const response = await axios.get(
-      "https://travel-advisor.p.rapidapi.com/flights/search",
-      {
-        params: {
-          departureAirportCode: args.destination, // Assuming destination is the departure airport for now
-          arrivalAirportCode: args.destination, // Assuming destination is the arrival airport for now
-          departureDate: args.departureDate,
-          adults: args.adults || "1",
-          currency: args.currency || "USD",
-          units: args.units || "km",
-          lang: args.lang || "en_US",
-        },
-        headers: {
-          "X-RapidAPI-Key": TRAVEL_ADVISOR_API_KEY, // Use the API key here
-          "X-RapidAPI-Host": "travel-advisor.p.rapidapi.com",
-        },
+    const response = await axios.get("https://travel-advisor.p.rapidapi.com/flights/search", {
+      params: {
+        departureAirportCode: args.destination,
+        arrivalAirportCode: args.destination,
+        departureDate: args.departureDate,
+        adults: "1",
+        currency: "USD",
       },
-    );
+      headers: {
+        "X-RapidAPI-Key": TRAVEL_ADVISOR_API_KEY,
+        "X-RapidAPI-Host": "travel-advisor.p.rapidapi.com",
+      },
+    });
 
-    // Process the response and map to FlightResult type
-    console.log("Travel Advisor API Response:", response.data);
-    const flights = response.data.data.map((flight: any) => ({
+    return response.data.data.map((flight: any) => ({
       id: flight.id,
       airline: flight.airline,
       price: flight.price,
       departure: flight.departureTime,
     }));
-    return flights;
-  } catch (error: any) {
-    console.error("Error calling Travel Advisor API:", error);
-    throw new Error(`Travel Advisor API error: ${error.message}`);
+  } catch (error) {
+    console.error("Flight search error:", error);
+    return [];
   }
-
-  // Return mock data matching schema structure
-  // return [
-  //     { id: `fl-${Date.now()}`, airline: "MockAir", price: Math.round(Math.random() * 500 + 300), departure: `${args.departureDate}T09:00:00Z` },
-  //     { id: `fl-${Date.now()+1}`, airline: "CloudHop", price: Math.round(Math.random() * 500 + 350), departure: `${args.departureDate}T11:30:00Z` },
-  // ];
 }
 
 async function callHotelSearchAPI(args: any): Promise<HotelResult[]> {
-  console.log("--- Calling Booking.com API ---", args);
-  // Replace with actual API call to Booking.com
-  const options = {
-    method: "GET",
-    url: "https://booking-com15.p.rapidapi.com/api/v1/hotels/searchHotelsByCoordinates",
-    params: {
-      latitude: args.latitude,
-      longitude: args.longitude,
-      arrival_date: args.checkInDate,
-      departure_date: args.checkOutDate,
-      adults: args.numberOfGuests || "1",
-      children_age: "0,17",
-      room_qty: "1",
-      units: "metric",
-      page_number: "1",
-      temperature_unit: "c",
-      languagecode: "en-us",
-      currency_code: "EUR",
-      location: args.destination,
-    },
-    headers: {
-      "x-rapidapi-key": TRAVEL_ADVISOR_API_KEY, // Use the API key here
-      "x-rapidapi-host": "booking-com15.p.rapidapi.com",
-    },
-  };
-
+  console.log("Searching hotels for:", args);
   try {
-    const response = await axios.request(options);
-    console.log("Booking.com API Response:", response.data);
-    // Process the response and map to HotelResult type
-    // This is just an example, the actual response structure may vary
-    const hotels = [
-      {
-        id: "hotel-1",
-        name: "Example Hotel",
-        pricePerNight: 100,
-        rating: 4.5,
+    const response = await axios.get("https://booking-com15.p.rapidapi.com/api/v1/hotels/searchHotelsByCoordinates", {
+      params: {
+        latitude: "0",
+        longitude: "0",
+        arrival_date: args.checkInDate,
+        departure_date: args.checkOutDate,
+        adults: args.numberOfGuests || "1",
+        room_qty: "1",
+        location: args.destination,
       },
+      headers: {
+        "X-RapidAPI-Key": TRAVEL_ADVISOR_API_KEY,
+        "X-RapidAPI-Host": "booking-com15.p.rapidapi.com",
+      },
+    });
+
+    return [
+      {
+        id: "mock-hotel-1",
+        name: "Sample Hotel",
+        pricePerNight: 150,
+        rating: 4.5,
+      }
     ];
-    return hotels;
-  } catch (error: any) {
-    console.error("Error calling Booking.com API:", error);
-    throw new Error(`Booking.com API error: ${error.message}`);
+  } catch (error) {
+    console.error("Hotel search error:", error);
+    return [];
   }
 }
 
 async function callImageGenerationAPI(args: any): Promise<ImageResult> {
-  console.log("--- Calling Image Generation API ---", args);
-  const GEMINI_IMAGE_API_KEY = process.env.GEMINI_API_KEY;
-
-  if (!GEMINI_IMAGE_API_KEY) {
-    console.error("GEMINI_API_KEY environment variable is not set.");
+  if (!process.env.NEXT_PUBLIC_GEMINI_API_KEY) {
     return { imageUrl: "" };
   }
 
-  const genAI = new GoogleGenerativeAI(GEMINI_IMAGE_API_KEY);
-  const model = genAI.getGenerativeModel({ model: "gemini-pro-vision" });
-
-  const prompt = `Generate a visually appealing image representing the travel destination: ${args.destinationDescription}`;
+  const imageGenAI = new GoogleGenerativeAI(process.env.NEXT_PUBLIC_GEMINI_API_KEY);
+  const imageModel = imageGenAI.getGenerativeModel({ model: "gemini-pro-vision" });
 
   try {
-    const result = await model.generateContent([prompt]);
+    const result = await imageModel.generateContent([`Generate an image of ${args.destinationDescription}`]);
     const response = result.response;
     const imagePart = response.candidates?.[0]?.content?.parts?.[0];
 
-    if (imagePart?.inlineData?.data && imagePart?.inlineData?.mimeType) {
-      const imageUrl = `data:${imagePart.inlineData.mimeType};base64,${imagePart.inlineData.data}`;
-      return { imageUrl: imageUrl };
-    } else {
-      console.error("No image data found in the response.");
-      return { imageUrl: "" };
+    if (imagePart?.inlineData?.data) {
+      return { 
+        imageUrl: `data:${imagePart.inlineData.mimeType};base64,${imagePart.inlineData.data}` 
+      };
     }
-  } catch (error: any) {
-    console.error("Error generating image:", error);
-    return { imageUrl: "" };
+  } catch (error) {
+    console.error("Image generation error:", error);
   }
+
+  return { imageUrl: "" };
 }
 
-export async function generateTripPlan(
-  boardContent: string,
-): Promise<Partial<SelectAiOutput>> {
-  console.log("Starting Gemini trip generation...");
+export async function generateTripPlan(boardContent: string): Promise<Partial<SelectAiOutput>> {
+  console.log("Starting trip plan generation...");
 
   const chat = model.startChat({
     tools: [{ functionDeclarations }],
   });
 
   const initialPrompt = `
-You are a helpful travel planning assistant. Analyze the following user inputs gathered from a collaborative whiteboard. Identify the key travel preferences (destination ideas, activities, budget, dates, style, etc.).
+You are an expert travel planning assistant analyzing text from a collaborative whiteboard.
 
-Based on your analysis, suggest ONE primary travel destination (City, Country).
+The input contains text elements with:
+- Type (Sticky Note or Text Box)
+- Content
+- Position on board
+- Creation timestamp
 
-Then, determine the necessary information needed to create a basic travel plan (flights, hotels, a representative image). Use the available tools (searchFlights, searchHotels, generateDestinationImage) to gather this information. If crucial information like dates or a clear destination isn't present in the user inputs, state what's missing instead of calling the functions.
+ANALYSIS INSTRUCTIONS:
+1. Examine each element's:
+   - Content and context
+   - When it was added (evolution of discussion)
+   - Position (related ideas may be grouped)
 
-User Inputs:
----
-${boardContent}
----
+2. Identify travel preferences:
+   - Destination ideas
+   - Activities/interests
+   - Budget constraints
+   - Timing preferences
+   - Travel style (luxury/adventure/etc)
+   - Group details
 
-First, provide the suggested destination and a brief summary in JSON format like this:
+3. Suggest ONE destination that best matches the group's needs.
+
+4. Format your suggestion as JSON:
 {
-  "place": "Destination City, Country",
-  "reason": "Brief explanation of why this destination matches the preferences."
+  "place": "City, Country",
+  "reason": "Detailed explanation referencing specific notes from the board"
 }
 
-Then, call the necessary functions to get flight options, hotel options, and a destination image URL.
-`;
+BOARD CONTENT:
+${boardContent}
+
+After providing destination JSON:
+- Use searchFlights if dates known
+- Use searchHotels if accommodation needs clear
+- Use generateDestinationImage for preview
+
+If crucial details missing (dates/budget), specify what's needed.`;
 
   console.log("Sending initial prompt to Gemini...");
   let result = await chat.sendMessage(initialPrompt);
-  let response = result.response;
-  let functionCallData: Record<string, any> = {}; // To store results from function calls
+  let currentResponse = result.response;
+  const functionCallData: Record<string, any> = {};
 
-  // --- Function Calling Loop ---
-  // Refined loop condition and access based on potential response structure
-  let currentResponse: GenerateContentResponse = result.response; // Use the imported type
-
-  while (
-    currentResponse.candidates?.[0]?.content?.parts?.some(
-      (part: Part) => part.functionCall,
-    )
-  ) {
+  while (currentResponse.candidates?.[0]?.content?.parts?.some(part => part.functionCall)) {
     const functionCalls = currentResponse.candidates[0].content.parts
-      .filter((part: Part) => part.functionCall)
-      .map((part: Part) => part.functionCall as FunctionCall); // Extract function calls
+      .filter(part => part.functionCall)
+      .map(part => part.functionCall as FunctionCall);
 
-    console.log(
-      `Gemini wants to call ${functionCalls.length} function(s):`,
-      functionCalls.map((fc: FunctionCall) => fc.name),
-    );
-
+    console.log(`Processing ${functionCalls.length} function calls`);
+    
     const functionResponses = [];
 
-    // Iterate directly over the extracted functionCalls array
     for (const call of functionCalls) {
-      const functionName = call.name;
-      const args = call.args;
-      let apiResponseContent;
-      let success = false;
-
-      console.log(
-        `Executing function: ${functionName} with args:`,
-        JSON.stringify(args),
-      );
-
+      console.log(`Executing ${call.name}:`, call.args);
+      
       try {
-        if (functionName === "searchFlights") {
-          console.log("Calling searchFlights with args:", args);
-          apiResponseContent = await callFlightSearchAPI(args);
-          console.log("searchFlights API Response:", apiResponseContent);
-          functionCallData.flights = apiResponseContent; // Store result
-          success = true;
-        } else if (functionName === "searchHotels") {
-          console.log("Calling searchHotels with args:", args);
-          apiResponseContent = await callHotelSearchAPI(args);
-          console.log("searchHotels API Response:", apiResponseContent);
-          functionCallData.hotels = apiResponseContent; // Store result
-          success = true;
-        } else if (functionName === "generateDestinationImage") {
-          apiResponseContent = await callImageGenerationAPI(args);
-          functionCallData.imageUrl = apiResponseContent.imageUrl; // Store result
-          success = true;
-        } else {
-          console.warn(`Unknown function call requested: ${functionName}`);
-          apiResponseContent = { error: `Unknown function: ${functionName}` };
+        let response;
+        switch (call.name) {
+          case "searchFlights":
+            response = await callFlightSearchAPI(call.args);
+            functionCallData.flights = response;
+            break;
+          case "searchHotels":
+            response = await callHotelSearchAPI(call.args);
+            functionCallData.hotels = response;
+            break;
+          case "generateDestinationImage":
+            response = await callImageGenerationAPI(call.args);
+            functionCallData.imageUrl = response.imageUrl;
+            break;
         }
-      } catch (error: any) {
-        console.error(`Error executing function ${functionName}:`, error);
-        apiResponseContent = {
-          error: `Failed to execute ${functionName}: ${error.message}`,
-        };
+        
+        functionResponses.push({
+          name: call.name,
+          content: response
+        });
+      } catch (error) {
+        console.error(`Error in ${call.name}:`, error);
+        functionResponses.push({
+          name: call.name,
+          error: error instanceof Error ? error.message : "Unknown error"
+        });
       }
-
-      functionResponses.push({
-        functionName,
-        response: {
-          name: functionName,
-          content: apiResponseContent, // Send structured data back
-        },
-      });
-    } // end for loop
-
-    // Send the function responses back to Gemini
-    console.log("Sending function responses back to Gemini...");
-    try {
-      // Sending function response part back
-      result = await chat.sendMessage(
-        JSON.stringify({ functionResponse: { parts: functionResponses } }),
-      ); // Structure might vary slightly based on exact API needs
-      currentResponse = result.response; // Update response for the next loop iteration
-    } catch (error) {
-      console.error("Error sending function responses back to Gemini:", error);
-      // Handle potential errors during the follow-up message
-      throw new Error(
-        "Failed to continue conversation with Gemini after function calls.",
-      );
     }
-  } // end while loop
 
-  // --- Process Final Response ---
-  console.log(
-    "Gemini finished calling functions. Processing final response...",
-  );
-  // Ensure we get text from the final response object
-  const finalResponseText =
-    currentResponse.candidates?.[0]?.content?.parts?.[0]?.text || "";
-  console.log("Final Text from Gemini:", finalResponseText);
+    result = await chat.sendMessage(JSON.stringify({ 
+      functionResponse: { parts: functionResponses } 
+    }));
+    currentResponse = result.response;
+  }
 
-  // Attempt to parse the initial destination/summary JSON from the text
+  const finalText = currentResponse.candidates?.[0]?.content?.parts?.[0]?.text || "";
+  console.log("Final response:", finalText);
+
   let destination = "Unknown";
   let destinationSummary = {
     place: "Unknown",
-    reason: "Could not parse summary",
+    reason: "Could not determine from board content"
   };
+
   try {
-    // Basic parsing - might need more robust regex or structured output enforcement
-    const jsonMatch = finalResponseText.match(/\{[\s\S]*\}/);
+    const jsonMatch = finalText.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
-      const parsedSummary = JSON.parse(jsonMatch[0]);
-      if (parsedSummary.place && parsedSummary.reason) {
-        destinationSummary = parsedSummary;
-        destination = parsedSummary.place;
+      const parsed = JSON.parse(jsonMatch[0]);
+      if (parsed.place && parsed.reason) {
+        destinationSummary = parsed;
+        destination = parsed.place;
       }
     }
-  } catch (e) {
-    console.error(
-      "Failed to parse destination summary JSON from final text:",
-      e,
-    );
+  } catch (error) {
+    console.error("Error parsing destination JSON:", error);
   }
 
-  // TODO: Instruct Gemini to generate itinerary in the final step or parse from finalResponseText
-
-  // Construct the final output object based on parsed info and function call results
-  const output: Partial<SelectAiOutput> = {
-    destination: destination,
-    destinationSummary: JSON.stringify(destinationSummary), // Store as stringified JSON
-    destinationImageUrl: functionCallData.imageUrl || "No image generated", // Use stored URL
+  return {
+    destination,
+    destinationSummary: JSON.stringify(destinationSummary),
+    destinationImageUrl: functionCallData.imageUrl || "",
     vendorOptions: {
-      // Use stored flight/hotel data
       flights: functionCallData.flights || [],
-      hotels: functionCallData.hotels || [],
+      hotels: functionCallData.hotels || []
     },
-    itinerary: { days: [] }, // Placeholder - needs itinerary generation/parsing
-    // createdAt will be set in the API route
+    itinerary: { days: [] }
   };
-
-  console.log("Generated trip plan output (partial):", output);
-  return output;
 }

@@ -90,6 +90,7 @@ export interface LiveCanvasProps {
   scale?: number;
   position?: { x: number; y: number };
   setActiveTool?: (tool: ToolType) => void;
+  onGeminiResponse?: (response: string) => void; // Add the callback prop
 }
 
 // Shape options

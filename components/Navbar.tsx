@@ -10,10 +10,12 @@ interface NavbarProps {
     name: string;
     image: string;
   }[];
+  onGenerateClick?: () => void; // Add the prop for the click handler
 }
 
 const Navbar = ({
   boardName,
+  onGenerateClick, // Destructure the new prop
   collaborators = [
     { id: 1, name: "Alex", image: "/avatars/cat.jpg" },
     { id: 2, name: "Jamie", image: "/avatars/dog.jpg" },
@@ -58,6 +60,7 @@ const Navbar = ({
             variant="default"
             size="sm"
             className="w-32 bg-gradient-to-r from-purple-500 to-pink-500 text-white"
+            onClick={onGenerateClick} // Attach the handler
           >
             <Sparkles className="mr-2 h-4 w-4" />
             Generate
