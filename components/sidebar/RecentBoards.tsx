@@ -38,7 +38,7 @@ export default function RecentBoards() {
   const fetchBoards = useCallback(async () => {
     setLoading(true);
     const { boards, error } = await getRecentBoards();
-    setBoards(boards);
+    // setBoards(boards);
     setError(error);
     setLoading(false);
   }, []);
@@ -59,9 +59,9 @@ export default function RecentBoards() {
 
   if (boards.length === 0) {
     return (
-      <div className="text-muted-foreground text-center text-sm">
-        <p className="mb-1">No recent boards.</p>
-        <p>Create one or join an existing board!</p>
+      <div className="mt-4 rounded-lg border p-3 text-sm">
+        <p className="mb-2">No recent boards.</p>
+        <p className="font-normal">Create one or join an existing board!</p>
       </div>
     );
   }

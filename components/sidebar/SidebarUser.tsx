@@ -23,13 +23,13 @@ const SidebarUser = () => {
 
   return (
     <div className="p-6">
-      <div className="flex flex-col gap-4 rounded-lg border p-3">
+      <div className="flex flex-col gap-4 rounded-lg border p-4">
         <div className="flex items-center gap-3">
           <Avatar>
             <AvatarImage
               src={session.user.imageUrl || "/placeholder-user.jpg"}
             />
-            <AvatarFallback>
+            <AvatarFallback title={session.user.name}>
               {session.user.name?.[0] || session.user.email?.[0]}
             </AvatarFallback>
           </Avatar>
