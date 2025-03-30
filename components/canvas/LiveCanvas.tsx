@@ -150,12 +150,17 @@ export default function LiveCanvas({
       }
     });
 
+    // canvas.clear();
+
     // Add objects from storage
     Array.from(canvasObjects.entries()).forEach(([objectId, objectData]) => {
+      if (!objectData) return; // Skip if object data is null/undefined
+
       try {
         // @ts-ignore - Fabric types are not accurate for this method
         fabric.util.enlivenObjects([objectData], function (objects: any[]) {
           objects.forEach(function (obj: any) {
+            if (!obj) return; // Skip if object creation failed
             obj.objectId = objectId;
             obj._fromStorage = true;
             canvas.add(obj);
@@ -267,7 +272,7 @@ export default function LiveCanvas({
         });
 
         // Create author text
-        const authorText = new fabric.Text("User", {
+        const authorText = new fabric.IText("User", {
           left: stickyWidth - 40,
           top: stickyHeight - 20,
           fontSize: 12,
@@ -665,9 +670,9 @@ export default function LiveCanvas({
       const imageUrl = event.target.result.toString();
 
       // Create a fabric Image object
-      fabric.Image.fromURL(imageUrl, {
+      fabric.FabricImage.fromURL(imageUrl, {
         // @ts-ignore - Fabric types are not accurate for this method
-        onload: (img: fabric.Image) => {
+        onload: (img: fabric.FabricImage) => {
           // Scale image to fit within the canvas
           const maxWidth = canvas.width! * 0.8;
           const maxHeight = canvas.height! * 0.8;
@@ -738,6 +743,40 @@ export default function LiveCanvas({
   return (
     <div className="relative h-full w-full overflow-hidden">
       {/* Canvas element */}
+      <div className="absolute top-4 left-4 z-50 flex gap-2">
+        <button
+          onClick={() => {
+            console.log("Current Canvas Objects:", {
+              storageSize: canvasObjects.size,
+              objects: Array.from(canvasObjects.entries()).map(([id, obj]) => ({
+                id,
+                type: obj.type,
+                ...obj,
+              })),
+            });
+          }}
+          className="rounded-xl bg-teal-500 p-4 hover:bg-teal-600"
+        >
+          Show Objects
+        </button>
+        <button
+          onClick={() => {
+            if (canvas && canvasObjects) {
+              // Clear the canvas
+              canvas.clear();
+              canvas.renderAll();
+
+              // Clear all objects from storage using the mutation
+              Array.from(canvasObjects.keys()).forEach((key) => {
+                deleteObjectFromStorage(key);
+              });
+            }
+          }}
+          className="rounded-xl bg-red-500 p-4 hover:bg-red-600"
+        >
+          Clear All
+        </button>
+      </div>
       <canvas
         ref={canvasRef}
         id="canvas"
